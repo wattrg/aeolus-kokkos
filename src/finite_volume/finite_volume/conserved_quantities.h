@@ -2,8 +2,8 @@
 #define CONSERVED_QUANTITIES_H
 
 #include <gas/flow_state.h>
-#include <util/types.h>
 #include <util/numeric_types.h>
+#include <util/types.h>
 
 #include <Kokkos_Core.hpp>
 #include <fstream>
@@ -80,9 +80,7 @@ namespace Kokkos {
 template <typename T>
 struct reduction_identity<ConservedQuantitiesNorm<T> > {
     KOKKOS_FORCEINLINE_FUNCTION
-    static ConservedQuantitiesNorm<T> sum() {
-        return ConservedQuantitiesNorm<T>();
-    }
+    static ConservedQuantitiesNorm<T> sum() { return ConservedQuantitiesNorm<T>(); }
 };
 }  // namespace Kokkos
 

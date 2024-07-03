@@ -16,7 +16,8 @@ class ViscosityModel {
 public:
     ViscosityModel() {}
 
-    ViscosityModel(Ibis::real mu0, Ibis::real T0, Ibis::real Ts) : mu0_(mu0), T0_(T0), Ts_(Ts) {}
+    ViscosityModel(Ibis::real mu0, Ibis::real T0, Ibis::real Ts)
+        : mu0_(mu0), T0_(T0), Ts_(Ts) {}
 
     ViscosityModel(json config) {
         mu0_ = config.at("mu_0");

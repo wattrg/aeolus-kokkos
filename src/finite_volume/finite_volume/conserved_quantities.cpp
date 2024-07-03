@@ -4,8 +4,9 @@
 template <typename T>
 void ConservedQuantitiesNorm<T>::write_to_file(std::ofstream& f, double time,
                                                unsigned int step) {
-    f << time << " " << step << " " << Ibis::real_part(mass()) << " " << Ibis::real_part(momentum_x()) << " "
-      << Ibis::real_part(momentum_y()) << " " << Ibis::real_part(momentum_z()) << " " << Ibis::real_part(energy()) << std::endl;
+    f << time << " " << step << " " << Ibis::real_part(mass()) << " "
+      << Ibis::real_part(momentum_x()) << " " << Ibis::real_part(momentum_y()) << " "
+      << Ibis::real_part(momentum_z()) << " " << Ibis::real_part(energy()) << std::endl;
 }
 template class ConservedQuantitiesNorm<Ibis::real>;
 template class ConservedQuantitiesNorm<Ibis::dual>;
