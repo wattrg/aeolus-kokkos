@@ -35,20 +35,20 @@ void Hanel<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& righ
 
             // pressure and velocity splitting (eqn. 7 and 9)
             T pLplus, uLplus;
-            if (Kokkos::abs(uL) <= aL) {
+            if (Ibis::abs(uL) <= aL) {
                 uLplus = 1.0 / (4.0 * aL) * (uL + aL) * (uL + aL);
                 pLplus = pL * uLplus * (1.0 / aL * (2.0 - uL / aL));
             } else {
-                uLplus = 0.5 * (uL + Kokkos::abs(uL));
+                uLplus = 0.5 * (uL + Ibis::abs(uL));
                 pLplus = pL * uLplus * (1.0 / uL);
             }
 
             T pRminus, uRminus;
-            if (Kokkos::abs(uR) <= aR) {
+            if (Ibis::abs(uR) <= aR) {
                 uRminus = -1.0 / (4.0 * aR) * (uR - aR) * (uR - aR);
                 pRminus = pR * uRminus * (1.0 / aR * (-2.0 - uR / aR));
             } else {
-                uRminus = 0.5 * (uR - Kokkos::abs(uR));
+                uRminus = 0.5 * (uR - Ibis::abs(uR));
                 pRminus = pR * uRminus * (1.0 / uR);
             }
 
@@ -63,4 +63,5 @@ void Hanel<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& righ
             flux.energy(i) = uLplus * rL * HL + uRminus * rR * HR;
         });
 }
-template class Hanel<double>;
+template class Hanel<Ibis::real>;
+template class Hanel<Ibis::dual>;

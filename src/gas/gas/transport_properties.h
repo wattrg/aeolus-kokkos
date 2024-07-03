@@ -4,6 +4,7 @@
 #include <gas/gas_model.h>
 #include <gas/gas_state.h>
 #include <spdlog/spdlog.h>
+#include <util/numeric_types.h>
 
 #include <nlohmann/json.hpp>
 #include <stdexcept>
@@ -29,14 +30,14 @@ public:
               const IdealGas<T>& gas_model, const size_t i) const {
         (void)gas_model;
         T temp = gas_states.temp(i);
-        return mu0_ * Kokkos::pow(temp / T0_, 3 / 2) * (T0_ + Ts_) / (temp + Ts_);
+        return mu0_ * Ibis::pow(temp / T0_, T(3.0 / 2.0)) * (T0_ + Ts_) / (temp + Ts_);
     }
 
     KOKKOS_INLINE_FUNCTION T viscosity(const GasState<T>& gas_state,
                                        const IdealGas<T>& gas_model) const {
         (void)gas_model;
         T temp = gas_state.temp;
-        return mu0_ * Kokkos::pow(temp / T0_, 3 / 2) * (T0_ + Ts_) / (temp + Ts_);
+        return mu0_ * Ibis::pow(temp / T0_, 3. / 2.0) * (T0_ + Ts_) / (temp + Ts_);
     }
 
 private:

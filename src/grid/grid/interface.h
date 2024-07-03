@@ -196,8 +196,8 @@ public:
                 T z0 = vertices.positions().z(vertex_ids(0));
                 T z1 = vertices.positions().z(vertex_ids(1));
                 T ilength =
-                    1. / Kokkos::sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0) +
-                                      (z1 - z0) * (z1 - z0));
+                    1. / Ibis::sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0) +
+                                    (z1 - z0) * (z1 - z0));
                 this_tan1.x(i) = ilength * (x1 - x0);
                 this_tan1.y(i) = ilength * (y1 - y0);
                 this_tan1.z(i) = ilength * (z1 - z0);
@@ -236,7 +236,7 @@ public:
                         T t2z = t2zstar - proj * t1z;
 
                         // normalise the vector
-                        T ilength = 1.0 / Kokkos::sqrt(t2x * t2x + t2y * t2y + t2z * t2z);
+                        T ilength = 1.0 / Ibis::sqrt(t2x * t2x + t2y * t2y + t2z * t2z);
                         this_tan2.x(i) = ilength * t2x;
                         this_tan2.y(i) = ilength * t2y;
                         this_tan2.z(i) = ilength * t2z;

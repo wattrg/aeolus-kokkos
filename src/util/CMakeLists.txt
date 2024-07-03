@@ -25,5 +25,7 @@ if (Ibis_BUILD_TESTS)
 	      doctest
     )
 
+    target_include_directories(util_unittest PRIVATE .)
+
     add_test(NAME util_unittest COMMAND util_unittest)
 endif(Ibis_BUILD_TESTS)

@@ -1,6 +1,7 @@
 #include <finite_volume/convective_flux.h>
 #include <finite_volume/gradient.h>
 #include <spdlog/spdlog.h>
+#include <util/numeric_types.h>
 
 std::string string_from_reconstruction_vars(ThermoReconstructionVars vars) {
     switch (vars) {
@@ -410,4 +411,5 @@ void ConvectiveFlux<T>::compute_limiters(const FlowStates<T>& flow_states,
     }
 }
 
-template class ConvectiveFlux<double>;
+template class ConvectiveFlux<Ibis::real>;
+template class ConvectiveFlux<Ibis::dual>;

@@ -2,29 +2,30 @@
 #define GAS_MODEL_H
 
 #include <gas/gas_state.h>
+#include <util/numeric_types.h>
 
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 
 template <typename T>
-KOKKOS_INLINE_FUNCTION T rho_from_pT(T p, T temp, double R) {
+KOKKOS_INLINE_FUNCTION T rho_from_pT(T p, T temp, T R) {
     return p / (R * temp);
 }
 
 template <typename T>
-KOKKOS_INLINE_FUNCTION T T_from_rhop(T rho, T p, double R) {
+KOKKOS_INLINE_FUNCTION T T_from_rhop(T rho, T p, T R) {
     return p / (rho * R);
 }
 
 template <typename T>
-KOKKOS_INLINE_FUNCTION T p_from_rhoT(T rho, T temp, double R) {
+KOKKOS_INLINE_FUNCTION T p_from_rhoT(T rho, T temp, T R) {
     return rho * R * temp;
 }
 
 template <typename T>
 KOKKOS_INLINE_FUNCTION T speed_of_sound_(T temp, T R, T gamma) {
-    return Kokkos::sqrt(gamma * R * temp);
+    return Ibis::sqrt(gamma * R * temp);
 }
 
 template <typename T>
@@ -46,8 +47,8 @@ class IdealGas {
 public:
     IdealGas() {}
 
-    IdealGas(double R) {
-        R_ = R;
+    IdealGas(Ibis::real R) {
+        R_ = T(R);
         Cv_ = 5.0 / 2.0 * R;
         Cp_ = 7.0 / 2.0 * R;
         gamma_ = Cp_ / Cv_;
@@ -166,22 +167,22 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    double R() const { return R_; }
+    T R() const { return R_; }
 
     KOKKOS_INLINE_FUNCTION
-    double Cv() const { return Cv_; }
+    T Cv() const { return Cv_; }
 
     KOKKOS_INLINE_FUNCTION
-    double Cp() const { return Cp_; }
+    T Cp() const { return Cp_; }
 
     KOKKOS_INLINE_FUNCTION
-    double gamma() const { return gamma_; }
+    T gamma() const { return gamma_; }
 
 private:
-    double R_;
-    double Cv_;
-    double Cp_;
-    double gamma_;
+    T R_;
+    T Cv_;
+    T Cp_;
+    T gamma_;
 };
 
 #endif

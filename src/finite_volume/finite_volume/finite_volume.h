@@ -13,6 +13,7 @@
 #include <gas/transport_properties.h>
 #include <grid/grid.h>
 #include <spdlog/spdlog.h>
+#include <util/numeric_types.h>
 
 #include <nlohmann/json.hpp>
 
@@ -54,8 +55,8 @@ public:
      * @param trans_prop The transport properties
      * @return the size of the time step
      */
-    double estimate_dt(const FlowStates<T>& flow_state, GridBlock<T>& grid,
-                       IdealGas<T>& gas_model, TransportProperties<T>& trans_prop);
+    Ibis::real estimate_dt(const FlowStates<T>& flow_state, GridBlock<T>& grid,
+                           IdealGas<T>& gas_model, TransportProperties<T>& trans_prop);
 
     // methods
     // these have to be public for NVCC, but they shouldn't really need to

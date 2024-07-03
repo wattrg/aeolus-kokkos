@@ -1,4 +1,5 @@
 #include <finite_volume/conserved_quantities.h>
+#include <util/numeric_types.h>
 
 template <typename T>
 void ConservedQuantitiesNorm<T>::write_to_file(std::ofstream& f, double time,
@@ -49,11 +50,11 @@ ConservedQuantitiesNorm<double> ConservedQuantities<T>::L2_norms() const {
         },
         Kokkos::Sum<ConservedQuantitiesNorm<double>>(norms));
 
-    norms.mass() = Kokkos::sqrt(norms.mass());
-    norms.momentum_x() = Kokkos::sqrt(norms.momentum_x());
-    norms.momentum_y() = Kokkos::sqrt(norms.momentum_y());
-    norms.momentum_z() = Kokkos::sqrt(norms.momentum_z());
-    norms.energy() = Kokkos::sqrt(norms.energy());
+    norms.mass() = Ibis::sqrt(norms.mass());
+    norms.momentum_x() = Ibis::sqrt(norms.momentum_x());
+    norms.momentum_y() = Ibis::sqrt(norms.momentum_y());
+    norms.momentum_z() = Ibis::sqrt(norms.momentum_z());
+    norms.energy() = Ibis::sqrt(norms.energy());
     return norms;
 }
 

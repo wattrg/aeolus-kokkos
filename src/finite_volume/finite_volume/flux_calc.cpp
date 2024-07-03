@@ -1,6 +1,7 @@
 #include <doctest/doctest.h>
 #include <finite_volume/flux_calc.h>
 #include <spdlog/spdlog.h>
+#include <util/numeric_types.h>
 
 #include <stdexcept>
 
@@ -19,4 +20,5 @@ std::unique_ptr<FluxCalculator<T>> make_flux_calculator(json config) {
     }
 }
 
-template std::unique_ptr<FluxCalculator<double>> make_flux_calculator(json);
+template std::unique_ptr<FluxCalculator<Ibis::real>> make_flux_calculator(json);
+template std::unique_ptr<FluxCalculator<Ibis::dual>> make_flux_calculator(json);

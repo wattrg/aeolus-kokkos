@@ -2,6 +2,7 @@
 #include <finite_volume/conserved_quantities.h>
 #include <finite_volume/finite_volume.h>
 #include <finite_volume/flux_calc.h>
+#include <util/numeric_types.h>
 
 #include <stdexcept>
 
@@ -68,9 +69,9 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, const GridBlock<
 }
 
 template <typename T>
-double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state, GridBlock<T>& grid,
-                                    IdealGas<T>& gas_model,
-                                    TransportProperties<T>& trans_prop) {
+Ibis::real FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
+                                        GridBlock<T>& grid, IdealGas<T>& gas_model,
+                                        TransportProperties<T>& trans_prop) {
     (void)trans_prop;
     size_t num_cells = grid.num_cells();
     CellFaces<T> cell_interfaces = grid.cells().faces();
@@ -81,10 +82,10 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state, GridBlock<T
     double viscous_signal_factor = viscous_flux_.signal_factor();
     // IdealGas<T> gas_model = gas_model_;
 
-    double dt;
+    Ibis::real dt;
     Kokkos::parallel_reduce(
         "FV::signal_frequency", num_cells,
-        KOKKOS_LAMBDA(const size_t cell_i, double& dt_utd) {
+        KOKKOS_LAMBDA(const size_t cell_i, Ibis::real& dt_utd) {
             auto cell_face_ids = cell_interfaces.face_ids(cell_i);
 
             T vx = flow_state.vel.x(cell_i);
@@ -101,7 +102,7 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state, GridBlock<T
                         vy * interfaces.norm().y(i_face) +
                         vz * interfaces.norm().z(i_face);
                 T sig_vel =
-                    Kokkos::fabs(dot) + gas_model.speed_of_sound(flow_state.gas, cell_i);
+                    Ibis::abs(dot) + gas_model.speed_of_sound(flow_state.gas, cell_i);
                 spectral_radii_c += sig_vel * area;
 
                 if (viscous) {
@@ -116,9 +117,9 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state, GridBlock<T
             }
             T local_dt =
                 volume / (spectral_radii_c + viscous_signal_factor * spectral_radii_v);
-            dt_utd = Kokkos::min(local_dt, dt_utd);
+            dt_utd = Ibis::min(Ibis::real_part(local_dt), dt_utd);
         },
-        Kokkos::Min<double>(dt));
+        Kokkos::Min<Ibis::real>(dt));
 
     return dt;
 }
@@ -189,7 +190,7 @@ size_t FiniteVolume<T>::count_bad_cells(const FlowStates<T>& fs, const size_t nu
         "FiniteVolume::count_bad_cells", num_cells,
         KOKKOS_LAMBDA(const int cell_i, size_t& n_bad_cells_utd) {
             if (fs.gas.temp(cell_i) < 0.0 || fs.gas.rho(cell_i) < 0.0 ||
-                Kokkos::isnan(fs.gas.rho(cell_i)) || Kokkos::isinf(fs.gas.rho(cell_i))) {
+                Ibis::isnan(fs.gas.rho(cell_i)) || Ibis::isinf(fs.gas.rho(cell_i))) {
                 n_bad_cells_utd += 1;
             }
         },
@@ -215,4 +216,5 @@ void FiniteVolume<T>::compute_convective_gradient(
     convective_flux_.compute_convective_gradient(fs, grid, cell_grad_, grad_calc_);
 }
 
-template class FiniteVolume<double>;
+template class FiniteVolume<Ibis::real>;
+// template class FiniteVolume<Ibis::dual>;

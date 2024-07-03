@@ -22,7 +22,7 @@ KOKKOS_INLINE_FUNCTION T distance_between_points(
     T dy = yj - yi;
     T dz = zj - zi;
 
-    return Kokkos::sqrt(dx * dx + dy * dy + dz * dz);
+    return Ibis::sqrt(dx * dx + dy * dy + dz * dz);
 }
 
 // calculate the area of a triangle with vertices a, b, and c
@@ -45,7 +45,7 @@ KOKKOS_INLINE_FUNCTION T area_of_triangle(const Vector3s<T, Layout, Space>& pos,
     T cross_y = ab_z * ac_x - ab_x * ac_z;
     T cross_z = ab_x * ac_y - ab_y * ac_x;
 
-    return 0.5 * Kokkos::sqrt(cross_x * cross_x + cross_y * cross_y + cross_z * cross_z);
+    return 0.5 * Ibis::sqrt(cross_x * cross_x + cross_y * cross_y + cross_z * cross_z);
 }
 
 // calculate the area of a quadrilateral with vertices

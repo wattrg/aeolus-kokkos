@@ -7,6 +7,7 @@
 #include <solvers/runge_kutta.h>
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
+#include <util/numeric_types.h>
 
 #include <limits>
 
@@ -90,10 +91,10 @@ void RungeKutta::estimate_dt() {
     //   2. 1.5 x the previous time step
     //   3. The time till the next plot needs to be written
     stable_dt_ = fv_.estimate_dt(flow_, grid_, gas_model_, trans_prop_);
-    double dt_startup = Kokkos::min(cfl_->eval(t_) * stable_dt_, 1.5 * dt_);
-    dt_ = Kokkos::min(dt_startup, max_time_ - t_);
+    double dt_startup = Ibis::min(cfl_->eval(t_) * stable_dt_, 1.5 * dt_);
+    dt_ = Ibis::min(dt_startup, max_time_ - t_);
     if (plot_frequency_ > 0.0 && time_since_last_plot_ < plot_frequency_) {
-        dt_ = Kokkos::min(dt_, plot_frequency_ - time_since_last_plot_);
+        dt_ = Ibis::min(dt_, plot_frequency_ - time_since_last_plot_);
     }
 }
 

@@ -1,11 +1,10 @@
 #ifndef VECTOR3_H
 #define VECTOR3_H
 
-#include <Kokkos_Core.hpp>
-#include <Kokkos_MathematicalFunctions.hpp>
+#include <util/field.h>
+#include <util/numeric_types.h>
 
-#include "Kokkos_Macros.hpp"
-#include "field.h"
+#include <Kokkos_Core.hpp>
 
 // A single vector with 3 components
 template <typename T>

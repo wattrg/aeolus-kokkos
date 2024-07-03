@@ -44,5 +44,5 @@ TEST_CASE("distance_between_points") {
     results_host.deep_copy(results);
 
     // check results
-    CHECK(Kokkos::abs(results_host(0) - Kokkos::sqrt(19)) < EPS);
+    CHECK(Kokkos::abs(results_host(0) - Ibis::sqrt(19)) < EPS);
 }

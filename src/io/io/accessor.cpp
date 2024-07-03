@@ -73,7 +73,7 @@ T MachNumberAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>&
     T vx = fs.vel.x(i);
     T vy = fs.vel.y(i);
     T vz = fs.vel.z(i);
-    T v_mag = Kokkos::sqrt(vx * vx + vy * vy + vz * vz);
+    T v_mag = Ibis::sqrt(vx * vx + vy * vy + vz * vz);
     return v_mag / a;
 }
 template class MachNumberAccess<double>;

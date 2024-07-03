@@ -140,19 +140,19 @@ TEST_CASE("3D interface orientation lengths") {
         double t1x = block.interfaces().tan1().x(i);
         double t1y = block.interfaces().tan1().y(i);
         double t1z = block.interfaces().tan1().z(i);
-        double t1_length = Kokkos::sqrt(t1x * t1x + t1y * t1y + t1z * t1z);
+        double t1_length = Ibis::sqrt(t1x * t1x + t1y * t1y + t1z * t1z);
         CHECK(t1_length == doctest::Approx(1.0));
 
         double t2x = block.interfaces().tan2().x(i);
         double t2y = block.interfaces().tan2().y(i);
         double t2z = block.interfaces().tan2().z(i);
-        double t2_length = Kokkos::sqrt(t2x * t2x + t2y * t2y + t2z * t2z);
+        double t2_length = Ibis::sqrt(t2x * t2x + t2y * t2y + t2z * t2z);
         CHECK(t2_length == doctest::Approx(1.0));
 
         double nx = block.interfaces().norm().x(i);
         double ny = block.interfaces().norm().y(i);
         double nz = block.interfaces().norm().z(i);
-        double n_length = Kokkos::sqrt(nx * nx + ny * ny + nz * nz);
+        double n_length = Ibis::sqrt(nx * nx + ny * ny + nz * nz);
         CHECK(n_length == doctest::Approx(1.0));
     }
 }

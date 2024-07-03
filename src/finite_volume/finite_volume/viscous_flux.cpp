@@ -61,7 +61,7 @@ KOKKOS_INLINE_FUNCTION void hasselbacher_average(
     T ez = cells.centroids().z(right_cell) - cells.centroids().z(left_cell);
 
     // Some properties of the grid used by Hasselbacher averaging
-    T len_e = Kokkos::sqrt(ex * ex + ey * ey + ez * ez);
+    T len_e = Ibis::sqrt(ex * ex + ey * ey + ez * ez);
     Vector3<T> ehat{ex / len_e, ey / len_e, ez / len_e};
     Vector3<T> n{faces.norm().x(face), faces.norm().y(face), faces.norm().z(face)};
     T ehat_dot_n = ehat.x * n.x + ehat.y * n.y + ehat.z * n.z;

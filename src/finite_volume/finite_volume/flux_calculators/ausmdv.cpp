@@ -1,6 +1,7 @@
 #include <finite_volume/conserved_quantities.h>
 #include <finite_volume/flux_calc.h>
 #include <gas/flow_state.h>
+#include <util/numeric_types.h>
 
 #include <Kokkos_Core.hpp>
 
@@ -38,7 +39,7 @@ void Ausmdv<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& rig
             T alphaR = 2.0 * pRrR / (pLrL + pRrR);
 
             // Common sound speed (eqn 33) and Mach doubles.
-            T am = Kokkos::fmax(aL, aR);
+            T am = Ibis::max(aL, aR);
             T ML = uL / am;
             T MR = uR / am;
 
@@ -46,8 +47,8 @@ void Ausmdv<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& rig
             // pressure splitting (eqn 34)
             // and velocity splitting (eqn 30)
             T pLplus, uLplus;
-            T duL = 0.5 * (uL + Kokkos::fabs(uL));
-            if (Kokkos::fabs(ML) <= 1.0) {
+            T duL = 0.5 * (uL + Ibis::abs(uL));
+            if (Ibis::abs(ML) <= 1.0) {
                 pLplus = pL * (ML + 1.0) * (ML + 1.0) * (2.0 - ML) * 0.25;
                 uLplus = alphaL * ((uL + am) * (uL + am) / (4.0 * am) - duL) + duL;
             } else {
@@ -59,8 +60,8 @@ void Ausmdv<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& rig
             // pressure splitting (eqn 34)
             // and velocity splitting (eqn 31)
             T pRminus, uRminus;
-            T duR = 0.5 * (uR - Kokkos::fabs(uR));
-            if (Kokkos::fabs(MR) <= 1.0) {
+            T duR = 0.5 * (uR - Ibis::abs(uR));
+            if (Ibis::abs(MR) <= 1.0) {
                 pRminus = pR * (MR - 1.0) * (MR - 1.0) * (2.0 + MR) * 0.25;
                 uRminus = alphaR * (-(uR - am) * (uR - am) / (4.0 * am) - duR) + duR;
             } else {
@@ -81,10 +82,10 @@ void Ausmdv<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& rig
             // and blend (eqn 36).
             T dp = pL - pR;
             const T K_SWITCH = 10.0;
-            dp = K_SWITCH * Kokkos::fabs(dp) / Kokkos::fmin(pL, pR);
-            T s = 0.5 * Kokkos::fmin(1.0, dp);
+            dp = K_SWITCH * Ibis::abs(dp) / Ibis::min(pL, pR);
+            T s = 0.5 * Ibis::min(1.0, dp);
             T ru2_AUSMV = uLplus * rL * uL + uRminus * rR * uR;
-            T ru2_AUSMD = 0.5 * (ru_half * (uL + uR) - Kokkos::fabs(ru_half) * (uR - uL));
+            T ru2_AUSMD = 0.5 * (ru_half * (uL + uR) - Ibis::abs(ru_half) * (uR - uL));
             T ru2_half = (0.5 + s) * ru2_AUSMV + (0.5 - s) * ru2_AUSMD;
 
             // Assemble components of the flux vector.
@@ -129,4 +130,5 @@ void Ausmdv<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& rig
             }
         });
 }
-template class Ausmdv<double>;
+template class Ausmdv<Ibis::real>;
+template class Ausmdv<Ibis::dual>;

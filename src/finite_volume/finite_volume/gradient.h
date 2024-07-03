@@ -144,12 +144,12 @@ public:
                     sum_dydz += dy * dz;
                     sum_dzdz += dz * dz;
                 }
-                T r11 = Kokkos::sqrt(sum_dxdx);
+                T r11 = Ibis::sqrt(sum_dxdx);
                 T r12 = 1.0 / r11 * sum_dxdy;
-                T r22 = Kokkos::sqrt(sum_dydy - r12 * r12);
+                T r22 = Ibis::sqrt(sum_dydy - r12 * r12);
                 T r13 = 1.0 / r11 * sum_dxdz;
                 T r23 = 1.0 / r22 * (sum_dydz - r12 / r11 * sum_dxdz);
-                T r33 = Kokkos::sqrt(sum_dzdz - (r13 * r13 + r23 * r23));
+                T r33 = Ibis::sqrt(sum_dzdz - (r13 * r13 + r23 * r23));
                 r_11_(i) = r11;
                 r_12_(i) = r12;
                 r_22_(i) = r22;

@@ -1,5 +1,6 @@
 #include <finite_volume/limiter.h>
 #include <spdlog/spdlog.h>
+#include <util/numeric_types.h>
 
 #include <stdexcept>
 
@@ -16,7 +17,8 @@ std::unique_ptr<Limiter<T>> make_limiter(json config) {
         throw new std::runtime_error("Unknown limiter");
     }
 }
-template std::unique_ptr<Limiter<double>> make_limiter<double>(json);
+template std::unique_ptr<Limiter<Ibis::real>> make_limiter<Ibis::real>(json);
+template std::unique_ptr<Limiter<Ibis::dual>> make_limiter<Ibis::dual>(json);
 
 template <typename T>
 void BarthJespersen<T>::calculate_limiters(const Ibis::SubArray2D<T> values,
@@ -32,8 +34,8 @@ void BarthJespersen<T>::calculate_limiters(const Ibis::SubArray2D<T> values,
             T U_max = Ui;
             for (size_t j = 0; j < cells.neighbour_cells(cell_i).size(); j++) {
                 size_t neighbour_cell = cells.neighbour_cells(cell_i, j);
-                U_min = Kokkos::min(U_min, values(neighbour_cell));
-                U_max = Kokkos::max(U_max, values(neighbour_cell));
+                U_min = Ibis::min(U_min, values(neighbour_cell));
+                U_max = Ibis::max(U_max, values(neighbour_cell));
             }
 
             T phi = 1.0;
@@ -49,17 +51,18 @@ void BarthJespersen<T>::calculate_limiters(const Ibis::SubArray2D<T> values,
                 T delta_2 =
                     grad.x(cell_i) * dx + grad.y(cell_i) * dy + grad.z(cell_i) * dz;
                 int sign_delta_2 = (delta_2 > 0) - (delta_2 < 0);
-                delta_2 = sign_delta_2 * (Kokkos::abs(delta_2) + epsilon);
+                delta_2 = sign_delta_2 * (Ibis::abs(delta_2) + epsilon);
                 if (sign_delta_2 > 0) {
-                    phi = Kokkos::min(phi, (U_max - Ui) / delta_2);
+                    phi = Ibis::min(phi, (U_max - Ui) / delta_2);
                 } else if (sign_delta_2 < 0) {
-                    phi = Kokkos::min(phi, (U_min - Ui) / delta_2);
+                    phi = Ibis::min(phi, (U_min - Ui) / delta_2);
                 }
             }
             limits(cell_i) = phi;
         });
 }
-template class BarthJespersen<double>;
+template class BarthJespersen<Ibis::real>;
+template class BarthJespersen<Ibis::dual>;
 
 // template <typename T>
 // void Venkat<T>::calculate_limiters(const Ibis::SubArray2D<T> values, Field<T>& limits,
@@ -74,8 +77,8 @@ template class BarthJespersen<double>;
 //             T U_max = Ui;
 //             for (size_t j = 0; j < cells.neighbour_cells(cell_i).size(); j++) {
 //                 size_t neighbour_cell = cells.neighbour_cells(cell_i, j);
-//                 U_min = Kokkos::min(U_min, values(neighbour_cell));
-//                 U_max = Kokkos::max(U_max, values(neighbour_cell));
+//                 U_min = Ibis::min(U_min, values(neighbour_cell));
+//                 U_max = Ibis::max(U_max, values(neighbour_cell));
 //             }
 //             T delta_1_max = U_max - Ui;
 //             T delta_1_min = U_min - Ui;
@@ -115,4 +118,5 @@ void Unlimited<T>::calculate_limiters(const Ibis::SubArray2D<T> values, Field<T>
     (void)faces;
     (void)grad;
 }
-template class Unlimited<double>;
+template class Unlimited<Ibis::real>;
+template class Unlimited<Ibis::dual>;

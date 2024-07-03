@@ -31,8 +31,9 @@ void add(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result) {
             result(i, 2) = a(i, 2) + b(i, 2);
         });
 }
-template void add<double>(const Vector3s<double> &a, const Vector3s<double> &b,
-                          Vector3s<double> &result);
+template void add<Ibis::real>(const Vector3s<Ibis::real> &a,
+                              const Vector3s<Ibis::real> &b,
+                              Vector3s<Ibis::real> &result);
 
 template <typename T>
 void subtract(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result) {
@@ -45,8 +46,9 @@ void subtract(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result) {
             result(i, 2) = a(i, 2) - b(i, 2);
         });
 }
-template void subtract<double>(const Vector3s<double> &a, const Vector3s<double> &b,
-                               Vector3s<double> &result);
+template void subtract<Ibis::real>(const Vector3s<Ibis::real> &a,
+                                   const Vector3s<Ibis::real> &b,
+                                   Vector3s<Ibis::real> &result);
 
 template <typename T>
 void cross(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result) {
@@ -59,8 +61,8 @@ void cross(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result) {
             result(i, 2) = a(i, 0) * b(i, 1) - a(i, 1) * b(i, 0);
         });
 }
-template void cross<double>(const Vector3s<double> &a, const Vector3s<double> &b,
-                            Vector3s<double> &result);
+template void cross<double>(const Vector3s<Ibis::real> &a, const Vector3s<Ibis::real> &b,
+                            Vector3s<Ibis::real> &result);
 
 template <typename T>
 void scale_in_place(Vector3s<T> &a, T factor) {
@@ -71,7 +73,7 @@ void scale_in_place(Vector3s<T> &a, T factor) {
             a(i, 2) *= factor;
         });
 }
-template void scale_in_place<double>(Vector3s<double> &a, double factor);
+template void scale_in_place<double>(Vector3s<Ibis::real> &a, Ibis::real factor);
 
 template <typename T>
 void length(const Vector3s<T> &a, Field<T> &len) {
@@ -79,23 +81,24 @@ void length(const Vector3s<T> &a, Field<T> &len) {
 
     Kokkos::parallel_for(
         "Vector3s length", a.size(), KOKKOS_LAMBDA(const size_t i) {
-            len(i) = sqrt(a(i, 0) * a(i, 0) + a(i, 1) * a(i, 1) + a(i, 2) * a(i, 2));
+            len(i) =
+                Ibis::sqrt(a(i, 0) * a(i, 0) + a(i, 1) * a(i, 1) + a(i, 2) * a(i, 2));
         });
 }
-template void length<double>(const Vector3s<double> &a, Field<double> &len);
+template void length<Ibis::real>(const Vector3s<Ibis::real> &a, Field<Ibis::real> &len);
 
 template <typename T>
 void normalise(Vector3s<T> &a) {
     Kokkos::parallel_for(
         "Vector3s normalise", a.size(), KOKKOS_LAMBDA(const size_t i) {
-            double length_inv =
-                1. / sqrt(a(i, 0) * a(i, 0) + a(i, 1) * a(i, 1) + a(i, 2) * a(i, 2));
+            double length_inv = 1. / Ibis::sqrt(a(i, 0) * a(i, 0) + a(i, 1) * a(i, 1) +
+                                                a(i, 2) * a(i, 2));
             a(i, 0) *= length_inv;
             a(i, 1) *= length_inv;
             a(i, 2) *= length_inv;
         });
 }
-template void normalise<double>(Vector3s<double> &a);
+template void normalise<double>(Vector3s<Ibis::real> &a);
 
 template <typename T>
 void transform_to_local_frame(Vector3s<T> &a, const Vector3s<T> &norm,
@@ -110,10 +113,14 @@ void transform_to_local_frame(Vector3s<T> &a, const Vector3s<T> &norm,
             a.z(i) = z;
         });
 }
-template void transform_to_local_frame<double>(Vector3s<double> &a,
-                                               const Vector3s<double> &norm,
-                                               const Vector3s<double> &tan1,
-                                               const Vector3s<double> tan2);
+template void transform_to_local_frame<Ibis::real>(Vector3s<Ibis::real> &a,
+                                                   const Vector3s<Ibis::real> &norm,
+                                                   const Vector3s<Ibis::real> &tan1,
+                                                   const Vector3s<Ibis::real> tan2);
+template void transform_to_local_frame<Ibis::dual>(Vector3s<Ibis::dual> &a,
+                                                   const Vector3s<Ibis::dual> &norm,
+                                                   const Vector3s<Ibis::dual> &tan1,
+                                                   const Vector3s<Ibis::dual> tan2);
 
 template <typename T>
 void transform_to_global_frame(Vector3s<T> &a, const Vector3s<T> &norm,
@@ -129,10 +136,14 @@ void transform_to_global_frame(Vector3s<T> &a, const Vector3s<T> &norm,
         });
 }
 
-template void transform_to_global_frame<double>(Vector3s<double> &a,
-                                                const Vector3s<double> &norm,
-                                                const Vector3s<double> &tan1,
-                                                const Vector3s<double> &tan2);
+template void transform_to_global_frame<Ibis::real>(Vector3s<Ibis::real> &a,
+                                                    const Vector3s<Ibis::real> &norm,
+                                                    const Vector3s<Ibis::real> &tan1,
+                                                    const Vector3s<Ibis::real> &tan2);
+template void transform_to_global_frame<Ibis::dual>(Vector3s<Ibis::dual> &a,
+                                                    const Vector3s<Ibis::dual> &norm,
+                                                    const Vector3s<Ibis::dual> &tan1,
+                                                    const Vector3s<Ibis::dual> &tan2);
 
 TEST_CASE("Vector Dot Product") {
     size_t n = 10;
@@ -356,8 +367,8 @@ TEST_CASE("Vector3s length") {
         a_host(i, 1) = 2.0 * i;
         a_host(i, 2) = 3.0 * i;
 
-        expected(i) = sqrt(a_host.x(i) * a_host.x(i) + a_host.y(i) * a_host.y(i) +
-                           a_host.z(i) * a_host.z(i));
+        expected(i) = Ibis::sqrt(a_host.x(i) * a_host.x(i) + a_host.y(i) * a_host.y(i) +
+                                 a_host.z(i) * a_host.z(i));
     }
 
     a_dev.deep_copy(a_host);
@@ -385,7 +396,7 @@ TEST_CASE("Vector3s normalise") {
     a_host.deep_copy(a_dev);
 
     for (size_t i = 0; i < n; i++) {
-        double length_inv = sqrt((i + 1.0) * (i + 1.0) + 4.0 * i * i + 9.0 * i * i);
+        double length_inv = Ibis::sqrt((i + 1.0) * (i + 1.0) + 4.0 * i * i + 9.0 * i * i);
         CHECK(Kokkos::fabs(a_host.x(i) - 1.0 * (i + 1.0) / length_inv) < VEC3_TOL);
         CHECK(Kokkos::fabs(a_host.y(i) - 2.0 * i / length_inv) < VEC3_TOL);
         CHECK(Kokkos::fabs(a_host.z(i) - 3.0 * i / length_inv) < VEC3_TOL);
@@ -422,10 +433,10 @@ TEST_CASE("Vector3s::transform_to_local_frame") {
 
     a_host.x(2) = 1.0;
     a_host.y(2) = 1.0;
-    norm_host.x(2) = -1 / Kokkos::sqrt(2);
-    norm_host.y(2) = 1 / Kokkos::sqrt(2);
-    tan1_host.x(2) = 1 / Kokkos::sqrt(2);
-    norm_host.y(2) = 1 / Kokkos::sqrt(2);
+    norm_host.x(2) = -1 / Ibis::sqrt(2);
+    norm_host.y(2) = 1 / Ibis::sqrt(2);
+    tan1_host.x(2) = 1 / Ibis::sqrt(2);
+    norm_host.y(2) = 1 / Ibis::sqrt(2);
     tan2_host.z(2) = 1.0;
 
     a_dev.deep_copy(a_host);

@@ -1,6 +1,7 @@
 #include <finite_volume/conserved_quantities.h>
 #include <finite_volume/flux_calc.h>
 #include <gas/flow_state.h>
+#include <util/numeric_types.h>
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_MathematicalFunctions.hpp>
@@ -46,12 +47,12 @@ void Ldfss2<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& rig
             T MmR = -0.25 * (MR - 1.0) * (MR - 1.0);
 
             // parameters to provide correct sonic-point transition behaviour
-            T alphaL = 0.5 * (1.0 + Kokkos::copysignf(1.0, ML));
-            T alphaR = 0.5 * (1.0 - Kokkos::copysignf(1.0, MR));
+            T alphaL = 0.5 * (1.0 + Ibis::copysign(T(1.0), ML));
+            T alphaR = 0.5 * (1.0 - Ibis::copysign(T(1.0), MR));
 
             // equation 17
-            T betaL = -Kokkos::fmax(0.0, 1.0 - Kokkos::floor(Kokkos::fabs(ML)));
-            T betaR = -Kokkos::fmax(0.0, 1.0 - Kokkos::floor(Kokkos::fabs(MR)));
+            T betaL = -Ibis::max(0.0, 1.0 - Ibis::floor(Ibis::abs(ML)));
+            T betaR = -Ibis::max(0.0, 1.0 - Ibis::floor(Ibis::abs(MR)));
 
             // subsonic pressure splitting (eqn 12)
             T PL = 0.25 * (ML + 1.0) * (ML + 1.0) * (2.0 - ML);
@@ -62,14 +63,14 @@ void Ldfss2<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& rig
             T DR = alphaR * (1.0 + betaR) - betaR * PR;
 
             T Mhalf = 0.25 * betaL * betaR *
-                      Kokkos::powf((Kokkos::sqrt(0.5 * (ML * ML + MR * MR)) - 1.0), 2);
+                      Ibis::pow((Ibis::sqrt(0.5 * (ML * ML + MR * MR)) - 1.0), T(2.0));
 
             T MhalfL =
                 Mhalf *
-                (1.0 - ((pL - pR) / (pL + pR) + delta * (Kokkos::fabs(pL - pR) / pL)));
+                (1.0 - ((pL - pR) / (pL + pR) + delta * (Ibis::abs(pL - pR) / pL)));
             T MhalfR =
                 Mhalf *
-                (1.0 + ((pL - pR) / (pL + pR) - delta * (Kokkos::fabs(pL - pR) / pR)));
+                (1.0 + ((pL - pR) / (pL + pR) - delta * (Ibis::abs(pL - pR) / pR)));
 
             // C parameter for LDFSS (2) (eqn 13 & eqn 14 & eqn 26 & eqn 27)
             T CL = alphaL * (1.0 + betaL) * ML - betaL * MpL - MhalfL;
@@ -87,4 +88,5 @@ void Ldfss2<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& rig
             flux.energy(i) = am * rL * CL * HL + am * rR * CR * HR;
         });
 }
-template class Ldfss2<double>;
+template class Ldfss2<Ibis::real>;
+template class Ldfss2<Ibis::dual>;
