@@ -3,6 +3,7 @@
 
 #include <gas/flow_state.h>
 #include <util/types.h>
+#include <util/numeric_types.h>
 
 #include <Kokkos_Core.hpp>
 #include <fstream>
@@ -63,7 +64,7 @@ public:
     KOKKOS_INLINE_FUNCTION
     T& energy() { return energy_; }
 
-    void write_to_file(std::ofstream& f, double time, unsigned int step);
+    void write_to_file(std::ofstream& f, Ibis::real time, unsigned int step);
 
 private:
     T mass_;
@@ -76,11 +77,11 @@ private:
 // this allows ConservedQuantity to be used as a custom scalar type
 // for Kokkos reductions
 namespace Kokkos {
-template <>
-struct reduction_identity<ConservedQuantitiesNorm<double> > {
+template <typename T>
+struct reduction_identity<ConservedQuantitiesNorm<T> > {
     KOKKOS_FORCEINLINE_FUNCTION
-    static ConservedQuantitiesNorm<double> sum() {
-        return ConservedQuantitiesNorm<double>();
+    static ConservedQuantitiesNorm<T> sum() {
+        return ConservedQuantitiesNorm<T>();
     }
 };
 }  // namespace Kokkos
@@ -101,9 +102,9 @@ public:
     KOKKOS_INLINE_FUNCTION
     int dim() const { return dim_; }
 
-    void apply_time_derivative(const ConservedQuantities<T>& dudt, double dt);
+    void apply_time_derivative(const ConservedQuantities<T>& dudt, Ibis::real dt);
 
-    ConservedQuantitiesNorm<double> L2_norms() const;
+    ConservedQuantitiesNorm<T> L2_norms() const;
 
     // ConservedQuantitiesNorm<double> Linf_norms() const;
 
@@ -151,6 +152,6 @@ private:
 
 template <typename T>
 void apply_time_derivative(const ConservedQuantities<T>& U0, ConservedQuantities<T>& U1,
-                           ConservedQuantities<T>& dUdt, double dt);
+                           ConservedQuantities<T>& dUdt, Ibis::real dt);
 
 #endif

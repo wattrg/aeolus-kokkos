@@ -16,7 +16,7 @@ class ViscosityModel {
 public:
     ViscosityModel() {}
 
-    ViscosityModel(double mu0, double T0, double Ts) : mu0_(mu0), T0_(T0), Ts_(Ts) {}
+    ViscosityModel(Ibis::real mu0, Ibis::real T0, Ibis::real Ts) : mu0_(mu0), T0_(T0), Ts_(Ts) {}
 
     ViscosityModel(json config) {
         mu0_ = config.at("mu_0");
@@ -37,13 +37,13 @@ public:
                                        const IdealGas<T>& gas_model) const {
         (void)gas_model;
         T temp = gas_state.temp;
-        return mu0_ * Ibis::pow(temp / T0_, 3. / 2.0) * (T0_ + Ts_) / (temp + Ts_);
+        return mu0_ * Ibis::pow(temp / T0_, T(3. / 2.0)) * (T0_ + Ts_) / (temp + Ts_);
     }
 
 private:
-    double mu0_;
-    double T0_;
-    double Ts_;
+    T mu0_;
+    T T0_;
+    T Ts_;
 };
 
 template <typename T>
@@ -51,7 +51,7 @@ class ThermalConductivityModel {
 public:
     ThermalConductivityModel() {}
 
-    ThermalConductivityModel(ViscosityModel<T> viscosity, double Pr)
+    ThermalConductivityModel(ViscosityModel<T> viscosity, Ibis::real Pr)
         : viscosity_(viscosity), Pr_(Pr) {}
 
     ThermalConductivityModel(ViscosityModel<T> viscosity, json config) {
@@ -75,7 +75,7 @@ public:
 
 private:
     ViscosityModel<T> viscosity_;
-    double Pr_;
+    T Pr_;
 };
 
 template <typename T>

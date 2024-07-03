@@ -183,4 +183,5 @@ void ViscousFlux<T>::compute_viscous_flux(
         });
 }
 
-template class ViscousFlux<double>;
+template class ViscousFlux<Ibis::real>;
+template class ViscousFlux<Ibis::dual>;

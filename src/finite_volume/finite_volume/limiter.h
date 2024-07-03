@@ -87,7 +87,7 @@ public:
                             Vector3s<T>& grid);
 
 private:
-    double epsilon_;
+    Ibis::real epsilon_;
 };
 
 // template <typename T>

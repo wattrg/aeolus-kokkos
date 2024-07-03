@@ -37,16 +37,12 @@ public:
 
     const FlowStates<T>& face_fs() const { return face_fs_; }
 
-    double signal_factor() const { return signal_factor_; }
+    Ibis::real signal_factor() const { return signal_factor_; }
 
 private:
     bool enabled_;
-
     FlowStates<T> face_fs_;
-
-    // Gradients<T> face_grad_;
-
-    double signal_factor_;
+    Ibis::real signal_factor_;
 };
 
 #endif

@@ -4,10 +4,11 @@
 template <typename T>
 void ConservedQuantitiesNorm<T>::write_to_file(std::ofstream& f, double time,
                                                unsigned int step) {
-    f << time << " " << step << " " << mass() << " " << momentum_x() << " "
-      << momentum_y() << " " << momentum_z() << " " << energy() << std::endl;
+    f << time << " " << step << " " << Ibis::real_part(mass()) << " " << Ibis::real_part(momentum_x()) << " "
+      << Ibis::real_part(momentum_y()) << " " << Ibis::real_part(momentum_z()) << " " << Ibis::real_part(energy()) << std::endl;
 }
-template class ConservedQuantitiesNorm<double>;
+template class ConservedQuantitiesNorm<Ibis::real>;
+template class ConservedQuantitiesNorm<Ibis::dual>;
 
 template <typename T>
 ConservedQuantities<T>::ConservedQuantities(unsigned int n, unsigned int dim)
@@ -35,11 +36,11 @@ void ConservedQuantities<T>::apply_time_derivative(const ConservedQuantities<T>&
 }
 
 template <typename T>
-ConservedQuantitiesNorm<double> ConservedQuantities<T>::L2_norms() const {
-    ConservedQuantitiesNorm<double> norms{};
+ConservedQuantitiesNorm<T> ConservedQuantities<T>::L2_norms() const {
+    ConservedQuantitiesNorm<T> norms{};
     Kokkos::parallel_reduce(
         "L2_norm", num_values_,
-        KOKKOS_CLASS_LAMBDA(const int i, ConservedQuantitiesNorm<double>& tl_cq) {
+        KOKKOS_CLASS_LAMBDA(const int i, ConservedQuantitiesNorm<T>& tl_cq) {
             tl_cq.mass() += mass(i) * mass(i);
             tl_cq.momentum_x() += momentum_x(i) * momentum_x(i);
             tl_cq.momentum_y() += momentum_y(i) * momentum_y(i);
@@ -48,7 +49,7 @@ ConservedQuantitiesNorm<double> ConservedQuantities<T>::L2_norms() const {
             }
             tl_cq.energy() += energy(i) * energy(i);
         },
-        Kokkos::Sum<ConservedQuantitiesNorm<double>>(norms));
+        Kokkos::Sum<ConservedQuantitiesNorm<T>>(norms));
 
     norms.mass() = Ibis::sqrt(norms.mass());
     norms.momentum_x() = Ibis::sqrt(norms.momentum_x());
@@ -58,11 +59,12 @@ ConservedQuantitiesNorm<double> ConservedQuantities<T>::L2_norms() const {
     return norms;
 }
 
-template class ConservedQuantities<double>;
+template class ConservedQuantities<Ibis::real>;
+template class ConservedQuantities<Ibis::dual>;
 
 template <typename T>
 void apply_time_derivative(const ConservedQuantities<T>& U0, ConservedQuantities<T>& U1,
-                           ConservedQuantities<T>& dUdt, double dt) {
+                           ConservedQuantities<T>& dUdt, Ibis::real dt) {
     size_t n_values = U0.size();
     size_t dim = U0.dim();
     Kokkos::parallel_for(
@@ -77,6 +79,9 @@ void apply_time_derivative(const ConservedQuantities<T>& U0, ConservedQuantities
         });
 }
 
-template void apply_time_derivative(const ConservedQuantities<double>&,
-                                    ConservedQuantities<double>&,
-                                    ConservedQuantities<double>&, double);
+template void apply_time_derivative(const ConservedQuantities<Ibis::real>&,
+                                    ConservedQuantities<Ibis::real>&,
+                                    ConservedQuantities<Ibis::real>&, Ibis::real);
+template void apply_time_derivative(const ConservedQuantities<Ibis::dual>&,
+                                    ConservedQuantities<Ibis::dual>&,
+                                    ConservedQuantities<Ibis::dual>&, Ibis::real);

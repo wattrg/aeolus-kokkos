@@ -79,7 +79,7 @@ Ibis::real FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
     Cells<T> cells = grid.cells();
     FlowStates<T> face_fs = viscous_flux_.face_fs();
     bool viscous = viscous_flux_.enabled();
-    double viscous_signal_factor = viscous_flux_.signal_factor();
+    Ibis::real viscous_signal_factor = viscous_flux_.signal_factor();
     // IdealGas<T> gas_model = gas_model_;
 
     Ibis::real dt;

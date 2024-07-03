@@ -8,7 +8,7 @@ template <typename T>
 std::unique_ptr<Limiter<T>> make_limiter(json config) {
     std::string limiter_type = config.at("type");
     if (limiter_type == "barth_jespersen") {
-        double epsilon = config.at("epsilon");
+        Ibis::real epsilon = config.at("epsilon");
         return std::unique_ptr<Limiter<T>>(new BarthJespersen<T>(epsilon));
     } else if (limiter_type == "unlimited") {
         return std::unique_ptr<Limiter<T>>(new Unlimited<T>());
@@ -25,7 +25,7 @@ void BarthJespersen<T>::calculate_limiters(const Ibis::SubArray2D<T> values,
                                            Field<T>& limits, const Cells<T>& cells,
                                            const Interfaces<T>& faces,
                                            Vector3s<T>& grad) {
-    double epsilon = epsilon_;
+    Ibis::real epsilon = epsilon_;
     Kokkos::parallel_for(
         "Limiter::barth_jesperson", cells.num_valid_cells(),
         KOKKOS_LAMBDA(const size_t cell_i) {
