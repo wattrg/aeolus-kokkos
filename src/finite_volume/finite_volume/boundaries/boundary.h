@@ -49,7 +49,7 @@ public:
 private:
     CubicSpline v_;
     CubicSpline T_;
-    T p_;
+    Ibis::real p_;
 };
 
 template <typename T>

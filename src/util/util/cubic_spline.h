@@ -1,14 +1,15 @@
 #include <Kokkos_Core.hpp>
 #include <cassert>
 #include <vector>
+#include <util/numeric_types.h>
 
 class CubicSpline {
 public:
     CubicSpline() {}
-    CubicSpline(std::vector<double> x, std::vector<double> y);
+    CubicSpline(std::vector<Ibis::real> x, std::vector<Ibis::real> y);
 
     KOKKOS_FUNCTION
-    double eval(const double x) const {
+    double eval(const Ibis::real x) const {
         // return the extreme values if a point outside the interpolation
         // region is asked for
         if (x <= x_min_) {
@@ -40,16 +41,16 @@ public:
 
 private:
     // The points to interpolate
-    Kokkos::View<double*> x_;
-    Kokkos::View<double*> y_;
+    Kokkos::View<Ibis::real*> x_;
+    Kokkos::View<Ibis::real*> y_;
 
     // the second derivatives to make evaluating the interpolation efficient
-    Kokkos::View<double*> y_dash_dash_;
+    Kokkos::View<Ibis::real*> y_dash_dash_;
 
-    double x_min_;
-    double x_max_;
-    double y_min_;
-    double y_max_;
+    Ibis::real x_min_;
+    Ibis::real x_max_;
+    Ibis::real y_min_;
+    Ibis::real y_max_;
 
     size_t n_pts_;
 };

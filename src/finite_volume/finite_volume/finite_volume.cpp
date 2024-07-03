@@ -217,4 +217,4 @@ void FiniteVolume<T>::compute_convective_gradient(
 }
 
 template class FiniteVolume<Ibis::real>;
-// template class FiniteVolume<Ibis::dual>;
+template class FiniteVolume<Ibis::dual>;

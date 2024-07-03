@@ -1,9 +1,10 @@
 #include <finite_volume/boundaries/boundary.h>
+#include <gas/transport_properties.h>
+#include <util/numeric_types.h>
 #include <spdlog/spdlog.h>
 
 #include <Kokkos_Core.hpp>
 
-#include "gas/transport_properties.h"
 
 template <typename T>
 FlowStateCopy<T>::FlowStateCopy(json flow_state) {
@@ -43,13 +44,14 @@ void FlowStateCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
             fs.vel.z(ghost_cell) = this_fs.velocity.z;
         });
 }
-template class FlowStateCopy<double>;
+template class FlowStateCopy<Ibis::real>;
+template class FlowStateCopy<Ibis::dual>;
 
 template <typename T>
 BoundaryLayerProfile<T>::BoundaryLayerProfile(json config) {
-    std::vector<double> x = config.at("height");
-    std::vector<double> v = config.at("v");
-    std::vector<double> temp = config.at("T");
+    std::vector<Ibis::real> x = config.at("height");
+    std::vector<Ibis::real> v = config.at("v");
+    std::vector<Ibis::real> temp = config.at("T");
     v_ = CubicSpline(x, v);
     T_ = CubicSpline(x, temp);
     p_ = config.at("p");
@@ -83,15 +85,16 @@ void BoundaryLayerProfile<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
 
             T pos = cells.centroids().y(ghost_cell);
             fs.gas.pressure(ghost_cell) = p;
-            fs.gas.temp(ghost_cell) = temp.eval(pos);
+            fs.gas.temp(ghost_cell) = temp.eval(Ibis::real_part(pos));
             gas_model.update_thermo_from_pT(fs.gas, ghost_cell);
 
-            fs.vel.x(ghost_cell) = v.eval(pos);
+            fs.vel.x(ghost_cell) = v.eval(Ibis::real_part(pos));
             fs.vel.y(ghost_cell) = 0.0;
             fs.vel.z(ghost_cell) = 0.0;
         });
 }
-template class BoundaryLayerProfile<double>;
+template class BoundaryLayerProfile<Ibis::real>;
+template class BoundaryLayerProfile<Ibis::dual>;
 
 template <typename T>
 void InternalCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
@@ -132,7 +135,8 @@ void InternalCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
             fs.vel.z(ghost_cell) = fs.vel.z(valid_cell);
         });
 }
-template class InternalCopy<double>;
+template class InternalCopy<Ibis::real>;
+template class InternalCopy<Ibis::dual>;
 
 template <typename T>
 void InternalCopyReflectNormal<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
@@ -247,7 +251,7 @@ void FixTemperature<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
     size_t size = boundary_faces.size();
     auto interfaces = grid.interfaces();
     size_t num_valid_cells = grid.num_cells();
-    double Twall = Twall_;
+    T Twall = Twall_;
     Kokkos::parallel_for(
         "FixTemperature", size, KOKKOS_LAMBDA(const size_t i) {
             size_t face_id = boundary_faces(i);
@@ -337,7 +341,8 @@ void SubsonicInflow<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
             fs.vel.z(ghost_cell) = 2 * vz_face - fs.vel.z(valid_cell);
         });
 }
-template class SubsonicInflow<double>;
+template class SubsonicInflow<Ibis::real>;
+template class SubsonicInflow<Ibis::dual>;
 
 template <typename T>
 void SubsonicOutflow<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
@@ -393,7 +398,8 @@ void SubsonicOutflow<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
             fs.vel.z(ghost_cell) = 2 * vz_face - fs.vel.z(valid_cell);
         });
 }
-template class SubsonicOutflow<double>;
+template class SubsonicOutflow<Ibis::real>;
+template class SubsonicOutflow<Ibis::dual>;
 
 template <typename T>
 std::shared_ptr<BoundaryAction<T>> build_boundary_action(json config) {
@@ -412,13 +418,13 @@ std::shared_ptr<BoundaryAction<T>> build_boundary_action(json config) {
     } else if (type == "internal_vel_copy_reflect") {
         action = std::shared_ptr<BoundaryAction<T>>(new InternalVelCopyReflect<T>());
     } else if (type == "fix_temperature") {
-        T temperature = config.at("temperature");
+        T temperature = T(config.at("temperature"));
         action = std::shared_ptr<BoundaryAction<T>>(new FixTemperature<T>(temperature));
     } else if (type == "subsonic_inflow") {
         json flow_state = config.at("flow_state");
         action = std::shared_ptr<BoundaryAction<T>>(new SubsonicInflow<T>(flow_state));
     } else if (type == "subsonic_outflow") {
-        T pressure = config.at("pressure");
+        T pressure = T(config.at("pressure"));
         action = std::shared_ptr<BoundaryAction<T>>(new SubsonicOutflow<T>(pressure));
     } else {
         spdlog::error("Unknown boundary action {}", type);
@@ -460,4 +466,5 @@ void BoundaryCondition<T>::apply_pre_viscous_grad(
         pre_viscous_grad_[i]->apply(fs, grid, boundary_faces, gas_model, trans_prop);
     }
 }
-template class BoundaryCondition<double>;
+template class BoundaryCondition<Ibis::real>;
+template class BoundaryCondition<Ibis::dual>;
