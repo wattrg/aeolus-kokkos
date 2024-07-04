@@ -104,7 +104,7 @@ public:
 
     ConservedQuantitiesNorm<T> L2_norms() const;
 
-    // ConservedQuantitiesNorm<double> Linf_norms() const;
+    // ConservedQuantitiesNorm<Ibis::real> Linf_norms() const;
 
     KOKKOS_INLINE_FUNCTION
     T& mass(int cell_i) const { return cq_(cell_i, mass_idx_); }

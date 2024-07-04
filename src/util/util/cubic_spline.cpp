@@ -6,7 +6,7 @@
 
 #include "Kokkos_Core_fwd.hpp"
 
-CubicSpline::CubicSpline(std::vector<double> x_vec, std::vector<double> y_vec) {
+CubicSpline::CubicSpline(std::vector<Ibis::real> x_vec, std::vector<Ibis::real> y_vec) {
     size_t n_pts = x_vec.size();
     n_pts_ = n_pts;
     if (n_pts < 4) {
@@ -23,8 +23,8 @@ CubicSpline::CubicSpline(std::vector<double> x_vec, std::vector<double> y_vec) {
     y_min_ = y_vec[0];
     y_max_ = y_vec[n_pts - 1];
 
-    x_ = Kokkos::View<double*>("CubicSpline::x_", n_pts);
-    y_ = Kokkos::View<double*>("CubicSpline::y_", n_pts);
+    x_ = Kokkos::View<Ibis::real*>("CubicSpline::x_", n_pts);
+    y_ = Kokkos::View<Ibis::real*>("CubicSpline::y_", n_pts);
 
     auto x = Kokkos::create_mirror_view(x_);
     auto y = Kokkos::create_mirror_view(y_);
@@ -37,15 +37,16 @@ CubicSpline::CubicSpline(std::vector<double> x_vec, std::vector<double> y_vec) {
     // have n_points - 2 equations to solve
     size_t n_eqns = n_pts - 2;
 
-    Kokkos::View<double*, Kokkos::DefaultHostExecutionSpace> diag("diag", n_eqns);
-    Kokkos::View<double*, Kokkos::DefaultHostExecutionSpace> upper("upper", n_eqns - 1);
-    Kokkos::View<double*, Kokkos::DefaultHostExecutionSpace> rhs("rhs", n_eqns);
-    Kokkos::View<double*, Kokkos::DefaultHostExecutionSpace> y_dash_dash("y_dash_dash",
-                                                                         n_eqns);
-    y_dash_dash_ = Kokkos::View<double*>("CubicSpline::y''", n_eqns);
+    Kokkos::View<Ibis::real*, Kokkos::DefaultHostExecutionSpace> diag("diag", n_eqns);
+    Kokkos::View<Ibis::real*, Kokkos::DefaultHostExecutionSpace> upper("upper",
+                                                                       n_eqns - 1);
+    Kokkos::View<Ibis::real*, Kokkos::DefaultHostExecutionSpace> rhs("rhs", n_eqns);
+    Kokkos::View<Ibis::real*, Kokkos::DefaultHostExecutionSpace> y_dash_dash(
+        "y_dash_dash", n_eqns);
+    y_dash_dash_ = Kokkos::View<Ibis::real*>("CubicSpline::y''", n_eqns);
 
     // fill in the arrays to set up the system of equations
-    double delta_xi, delta_yi;
+    Ibis::real delta_xi, delta_yi;
     for (size_t i = 0; i <= n_eqns; i++) {
         delta_xi = x(i + 1) - x(i);
         delta_yi = y(i + 1) - y(i);
@@ -68,7 +69,7 @@ CubicSpline::CubicSpline(std::vector<double> x_vec, std::vector<double> y_vec) {
 
     // use the Thomas alorithm to solve the tri-diagonal system of equations
     // sweep forward, eliminating bottom diagonal
-    double w;
+    Ibis::real w;
     for (size_t i = 1; i < n_eqns; i++) {
         w = upper(i - 1) / diag(i - 1);
         diag(i) = diag(i) - w * upper(i - 1);
@@ -88,14 +89,14 @@ CubicSpline::CubicSpline(std::vector<double> x_vec, std::vector<double> y_vec) {
 }
 
 TEST_CASE("CubicSpline") {
-    std::vector<double> x{1.0, 2.0, 3.0, 4.0, 8.0};
-    std::vector<double> y{4.0, 6.0, 8.0, 10.0, 18.0};
+    std::vector<Ibis::real> x{1.0, 2.0, 3.0, 4.0, 8.0};
+    std::vector<Ibis::real> y{4.0, 6.0, 8.0, 10.0, 18.0};
 
     CubicSpline spline(x, y);
 
-    Kokkos::View<double*> results_dev("Results", 7);
-    Kokkos::View<double*, Kokkos::DefaultHostExecutionSpace> results_host("Results_host",
-                                                                          7);
+    Kokkos::View<Ibis::real*> results_dev("Results", 7);
+    Kokkos::View<Ibis::real*, Kokkos::DefaultHostExecutionSpace> results_host(
+        "Results_host", 7);
 
     Kokkos::parallel_for(
         "Run cubic spline", 1, KOKKOS_LAMBDA(const size_t i) {
@@ -121,20 +122,20 @@ TEST_CASE("CubicSpline") {
 }
 
 TEST_CASE("CubicSpline2") {
-    std::vector<double> x{
+    std::vector<Ibis::real> x{
         0.000000000, 0.000286575, 0.000642487, 0.001041700, 0.001466750, 0.001900160,
         0.002326750, 0.003120560, 0.003816400, 0.004433000, 0.005547930, 0.006617530,
     };
-    std::vector<double> y{
+    std::vector<Ibis::real> y{
         0.00000, 153.017, 319.372, 488.652, 654.953, 811.480,
         951.827, 1167.76, 1295.30, 1356.55, 1387.81, 1390.00,
     };
 
     CubicSpline spline(x, y);
 
-    Kokkos::View<double*> results_dev("Results", 6);
-    Kokkos::View<double*, Kokkos::DefaultHostExecutionSpace> results_host("Results_host",
-                                                                          6);
+    Kokkos::View<Ibis::real*> results_dev("Results", 6);
+    Kokkos::View<Ibis::real*, Kokkos::DefaultHostExecutionSpace> results_host(
+        "Results_host", 6);
 
     Kokkos::parallel_for(
         "Run cubic spline", 1, KOKKOS_LAMBDA(const size_t i) {

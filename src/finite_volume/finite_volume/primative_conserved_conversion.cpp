@@ -25,8 +25,12 @@ int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T>& fs,
         });
     return 0;
 }
-template int conserved_to_primatives(ConservedQuantities<double>& cq,
-                                     FlowStates<double>& fs, const IdealGas<double>& gm);
+template int conserved_to_primatives(ConservedQuantities<Ibis::real>& cq,
+                                     FlowStates<Ibis::real>& fs,
+                                     const IdealGas<Ibis::real>& gm);
+template int conserved_to_primatives(ConservedQuantities<Ibis::dual>& cq,
+                                     FlowStates<Ibis::dual>& fs,
+                                     const IdealGas<Ibis::dual>& gm);
 
 template <typename T>
 int primatives_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs,
@@ -49,5 +53,9 @@ int primatives_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs,
         });
     return 0;
 }
-template int primatives_to_conserved(ConservedQuantities<double>& cq,
-                                     FlowStates<double>& fs, const IdealGas<double>& gm);
+template int primatives_to_conserved(ConservedQuantities<Ibis::real>& cq,
+                                     FlowStates<Ibis::real>& fs,
+                                     const IdealGas<Ibis::real>& gm);
+template int primatives_to_conserved(ConservedQuantities<Ibis::dual>& cq,
+                                     FlowStates<Ibis::dual>& fs,
+                                     const IdealGas<Ibis::dual>& gm);

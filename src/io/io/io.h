@@ -37,7 +37,7 @@ public:
     virtual int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T>& fv,
                       const GridBlock<T>& grid, const IdealGas<T>& gas_model,
                       const TransportProperties<T>& trans_prop, std::string plot_dir,
-                      std::string time_dir, double time) = 0;
+                      std::string time_dir, Ibis::real time) = 0;
 
     void add_variable(std::string name);
 
@@ -73,7 +73,7 @@ public:
     // write a flow state
     int write(const FlowStates<T>& flow_state, FiniteVolume<T>& fv,
               const GridBlock<T>& grid, const IdealGas<T>& gas_model,
-              const TransportProperties<T>& trans_prop, double time);
+              const TransportProperties<T>& trans_prop, Ibis::real time);
 
     void add_output_variable(std::string name) { output_->add_variable(name); }
 

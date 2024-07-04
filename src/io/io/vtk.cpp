@@ -25,7 +25,7 @@ std::uint8_t vtk_type_from_elem_type(ElemType type) {
 }
 
 template <typename T>
-void write_vtk_coordinating_file(std::string plot_dir, std::vector<double> times,
+void write_vtk_coordinating_file(std::string plot_dir, std::vector<Ibis::real> times,
                                  std::vector<std::string> dirs) {
     std::ofstream plot_file(plot_dir + "/plot.pvd");
     plot_file << "<?xml version='1.0'?>" << std::endl;
@@ -138,7 +138,7 @@ int VtkTextOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
                             FiniteVolume<T>& fv, const GridBlock<T>& grid,
                             const IdealGas<T>& gas_model,
                             const TransportProperties<T>& trans_prop,
-                            std::string plot_dir, std::string time_dir, double time) {
+                            std::string plot_dir, std::string time_dir, Ibis::real time) {
     auto grid_host = grid.host_mirror();
     grid_host.deep_copy(grid);
 
@@ -198,7 +198,7 @@ void VtkTextOutput<T>::write_coordinating_file(std::string plot_dir) {
     write_vtk_coordinating_file<T>(plot_dir, times_, dirs_);
 }
 
-template class VtkTextOutput<double>;
+template class VtkTextOutput<Ibis::real>;
 
 template <typename T>
 VtkBinaryOutput<T>::VtkBinaryOutput() {
@@ -381,7 +381,8 @@ int VtkBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
                               FiniteVolume<T>& fv, const GridBlock<T>& grid,
                               const IdealGas<T>& gas_model,
                               const TransportProperties<T>& trans_prop,
-                              std::string plot_dir, std::string time_dir, double time) {
+                              std::string plot_dir, std::string time_dir,
+                              Ibis::real time) {
     auto grid_host = grid.host_mirror();
     grid_host.deep_copy(grid);
 
@@ -446,4 +447,4 @@ void VtkBinaryOutput<T>::write_coordinating_file(std::string plot_dir) {
     write_vtk_coordinating_file<T>(plot_dir, times_, dirs_);
 }
 
-template class VtkBinaryOutput<double>;
+template class VtkBinaryOutput<Ibis::real>;

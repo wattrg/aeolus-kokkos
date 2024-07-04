@@ -80,7 +80,7 @@ public:
         json boundaries = config.at("boundaries");
 
         // set the positions of the vertices
-        std::vector<Vertex<double>> vertices = grid_io.vertices();
+        std::vector<Vertex<Ibis::real>> vertices = grid_io.vertices();
         vertices_ = Vertices<T, execution_space, array_layout>(vertices.size());
         auto host_vertices = vertices_.host_mirror();
         for (size_t i = 0; i < vertices.size(); i++) {

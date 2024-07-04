@@ -50,7 +50,7 @@ private:
 
 struct GridIO {
 public:
-    GridIO(std::vector<Vertex<double>> vertices, std::vector<ElemIO> cells,
+    GridIO(std::vector<Vertex<Ibis::real>> vertices, std::vector<ElemIO> cells,
            std::unordered_map<std::string, std::vector<ElemIO>> bcs)
         : vertices_(vertices), cells_(cells), bcs_(bcs) {}
 
@@ -61,7 +61,7 @@ public:
                (bcs_ == other.bcs_);
     }
 
-    std::vector<Vertex<double>> vertices() const { return vertices_; }
+    std::vector<Vertex<Ibis::real>> vertices() const { return vertices_; }
 
     std::vector<ElemIO> cells() const { return cells_; }
 
@@ -70,7 +70,7 @@ public:
     size_t dim() const { return dim_; }
 
 private:
-    std::vector<Vertex<double>> vertices_{};
+    std::vector<Vertex<Ibis::real>> vertices_{};
     std::vector<ElemIO> cells_{};
     std::unordered_map<std::string, std::vector<ElemIO>> bcs_;
     size_t dim_;

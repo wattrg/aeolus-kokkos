@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 
-#include "Kokkos_Macros.hpp"
-
 namespace Ibis {
 
 template <typename DataType, class Layout = Kokkos::DefaultExecutionSpace::array_layout,

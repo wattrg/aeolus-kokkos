@@ -6,21 +6,21 @@
 #include <memory>
 #include <stdexcept>
 
-ConstantSchedule::ConstantSchedule(double cfl) : cfl_(cfl) {}
+ConstantSchedule::ConstantSchedule(Ibis::real cfl) : cfl_(cfl) {}
 
-double ConstantSchedule::eval(double t) {
+Ibis::real ConstantSchedule::eval(Ibis::real t) {
     (void)t;
     return cfl_;
 }
 
 LinearSchedule::LinearSchedule(json schedule) {
-    std::vector<double> times = schedule.at("times");
-    std::vector<double> cfls = schedule.at("cfls");
+    std::vector<Ibis::real> times = schedule.at("times");
+    std::vector<Ibis::real> cfls = schedule.at("cfls");
     times_ = times;
     cfls_ = cfls;
 }
 
-double LinearSchedule::eval(double t) {
+Ibis::real LinearSchedule::eval(Ibis::real t) {
     if (t <= times_[0]) {
         return cfls_[0];
     }
@@ -30,10 +30,10 @@ double LinearSchedule::eval(double t) {
         return cfls_[n - 1];
     }
 
-    double cfl;
+    Ibis::real cfl;
     for (size_t i = 0; i < times_.size(); i++) {
         if (t > times_[i] && t < times_[i + 1]) {
-            double frac = (t - times_[i]) / (times_[i + 1] - times_[i]);
+            Ibis::real frac = (t - times_[i]) / (times_[i + 1] - times_[i]);
             printf("i = %lu, frac = %f\n", i, frac);
             cfl = cfls_[i] + frac * (cfls_[i + 1] - cfls_[i]);
             return cfl;

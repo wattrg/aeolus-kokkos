@@ -10,7 +10,7 @@ template <typename T>
 void Ldfss2<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& right,
                              ConservedQuantities<T>& flux, IdealGas<T>& gm,
                              bool three_d) {
-    double delta = delta_;
+    Ibis::real delta = delta_;
     Kokkos::parallel_for(
         "ldfss", flux.size(), KOKKOS_LAMBDA(const int i) {
             // unpack left flow state

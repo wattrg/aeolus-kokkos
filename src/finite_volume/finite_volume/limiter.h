@@ -80,7 +80,7 @@ class BarthJespersen : public Limiter<T> {
 public:
     ~BarthJespersen() {}
 
-    BarthJespersen(double epsilon) : Limiter<T>(true), epsilon_(epsilon) {}
+    BarthJespersen(Ibis::real epsilon) : Limiter<T>(true), epsilon_(epsilon) {}
 
     void calculate_limiters(const Ibis::SubArray2D<T> values, Field<T>& limits,
                             const Cells<T>& cells, const Interfaces<T>& faces,
@@ -89,23 +89,6 @@ public:
 private:
     Ibis::real epsilon_;
 };
-
-// template <typename T>
-// class Venkat : public Limiter<T> {
-// public:
-//     ~Venkat() {}
-
-//     Venkat() : Limiter<T>(true) {}
-
-//     Venkat(double K) : Limiter<T>(true), K_(K) {}
-
-//     void calculate_limiters(const Ibis::SubArray2D<T> values, Field<T>& limits, const
-//     Cells<T>& cells,
-//                             const Interfaces<T>& faces, Vector3s<T>& grid);
-
-// private:
-//     double K_;
-// };
 
 template <typename T>
 std::unique_ptr<Limiter<T>> make_limiter(json config);

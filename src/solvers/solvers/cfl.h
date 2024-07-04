@@ -1,8 +1,11 @@
 #ifndef CFL_H
 #define CFL_H
 
+#include <util/numeric_types.h>
+
 #include <memory>
 #include <nlohmann/json.hpp>
+
 using json = nlohmann::json;
 
 class CflSchedule {
@@ -11,19 +14,19 @@ public:
 
     virtual ~CflSchedule() {}
 
-    virtual double eval(double t) = 0;
+    virtual Ibis::real eval(Ibis::real t) = 0;
 };
 
 class ConstantSchedule : public CflSchedule {
 public:
     ConstantSchedule() {}
 
-    ConstantSchedule(double cfl);
+    ConstantSchedule(Ibis::real cfl);
 
-    double eval(double t);
+    Ibis::real eval(Ibis::real t);
 
 private:
-    double cfl_;
+    Ibis::real cfl_;
 };
 
 class LinearSchedule : public CflSchedule {
@@ -32,11 +35,11 @@ public:
 
     LinearSchedule(json schedule);
 
-    double eval(double t);
+    Ibis::real eval(Ibis::real t);
 
 private:
-    std::vector<double> times_;
-    std::vector<double> cfls_;
+    std::vector<Ibis::real> times_;
+    std::vector<Ibis::real> cfls_;
 };
 
 std::unique_ptr<CflSchedule> make_cfl_schedule(json config);

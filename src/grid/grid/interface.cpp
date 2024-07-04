@@ -104,18 +104,18 @@ TEST_CASE("interface look up") {
     CHECK(x.id(std::vector<size_t>{7, 6}) == 9);
 }
 
-Interfaces<double> generate_interfaces() {
-    Vertices<double> vertices(16);
+Interfaces<Ibis::real> generate_interfaces() {
+    Vertices<Ibis::real> vertices(16);
     auto vertices_host = vertices.host_mirror();
-    std::vector<Vector3<double>> vertex_pos{
-        Vector3<double>(0.0, 0.0, 0.0), Vector3<double>(1.0, 0.0, 0.0),
-        Vector3<double>(2.0, 0.0, 0.0), Vector3<double>(3.0, 0.0, 0.0),
-        Vector3<double>(0.0, 1.0, 0.0), Vector3<double>(1.0, 1.0, 0.0),
-        Vector3<double>(2.0, 1.0, 0.0), Vector3<double>(3.0, 1.0, 0.0),
-        Vector3<double>(0.0, 2.0, 0.0), Vector3<double>(1.0, 2.0, 0.0),
-        Vector3<double>(2.0, 2.0, 0.0), Vector3<double>(3.0, 2.0, 0.0),
-        Vector3<double>(0.0, 3.0, 0.0), Vector3<double>(1.0, 3.0, 0.0),
-        Vector3<double>(2.0, 3.0, 0.0), Vector3<double>(3.0, 3.0, 0.0)};
+    std::vector<Vector3<Ibis::real>> vertex_pos{
+        Vector3<Ibis::real>(0.0, 0.0, 0.0), Vector3<Ibis::real>(1.0, 0.0, 0.0),
+        Vector3<Ibis::real>(2.0, 0.0, 0.0), Vector3<Ibis::real>(3.0, 0.0, 0.0),
+        Vector3<Ibis::real>(0.0, 1.0, 0.0), Vector3<Ibis::real>(1.0, 1.0, 0.0),
+        Vector3<Ibis::real>(2.0, 1.0, 0.0), Vector3<Ibis::real>(3.0, 1.0, 0.0),
+        Vector3<Ibis::real>(0.0, 2.0, 0.0), Vector3<Ibis::real>(1.0, 2.0, 0.0),
+        Vector3<Ibis::real>(2.0, 2.0, 0.0), Vector3<Ibis::real>(3.0, 2.0, 0.0),
+        Vector3<Ibis::real>(0.0, 3.0, 0.0), Vector3<Ibis::real>(1.0, 3.0, 0.0),
+        Vector3<Ibis::real>(2.0, 3.0, 0.0), Vector3<Ibis::real>(3.0, 3.0, 0.0)};
     for (size_t i = 0; i < 16; i++) {
         vertices_host.set_vertex_position(i, vertex_pos[i]);
     }
@@ -133,7 +133,7 @@ Interfaces<double> generate_interfaces() {
         ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
     };
 
-    Interfaces<double> interfaces(interface_id_list, shapes);
+    Interfaces<Ibis::real> interfaces(interface_id_list, shapes);
     interfaces.compute_areas(vertices);
     interfaces.compute_orientations(vertices);
     interfaces.compute_centres(vertices);
@@ -141,7 +141,7 @@ Interfaces<double> generate_interfaces() {
 }
 
 TEST_CASE("Interface area") {
-    Interfaces<double> interfaces = generate_interfaces();
+    Interfaces<Ibis::real> interfaces = generate_interfaces();
     auto interfaces_mirror = interfaces.host_mirror();
     interfaces_mirror.deep_copy(interfaces);
     auto areas_mirror = interfaces_mirror.area();
@@ -151,7 +151,7 @@ TEST_CASE("Interface area") {
 }
 
 TEST_CASE("Interface directions") {
-    Interfaces<double> interfaces = generate_interfaces();
+    Interfaces<Ibis::real> interfaces = generate_interfaces();
     auto interfaces_mirror = interfaces.host_mirror();
     interfaces_mirror.deep_copy(interfaces);
     auto norm_mirror = interfaces_mirror.norm();
@@ -181,12 +181,14 @@ TEST_CASE("Interface directions") {
 }
 
 TEST_CASE("Interface centres") {
-    std::vector<double> xs = {0.5, 1.0, 0.5, 0.0, 1.5, 2.0, 1.5, 2.5, 3.0, 2.5, 1.0, 0.5,
-                              0.0, 2.0, 1.5, 3.0, 2.5, 1.0, 0.5, 0.0, 2.0, 1.5, 3.0, 2.5};
-    std::vector<double> ys = {0.0, 0.5, 1.0, 0.5, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0, 1.5, 2.0,
-                              1.5, 1.5, 2.0, 1.5, 2.0, 2.5, 3.0, 2.5, 2.5, 3.0, 2.5, 3.0};
+    std::vector<Ibis::real> xs = {0.5, 1.0, 0.5, 0.0, 1.5, 2.0, 1.5, 2.5,
+                                  3.0, 2.5, 1.0, 0.5, 0.0, 2.0, 1.5, 3.0,
+                                  2.5, 1.0, 0.5, 0.0, 2.0, 1.5, 3.0, 2.5};
+    std::vector<Ibis::real> ys = {0.0, 0.5, 1.0, 0.5, 0.0, 0.5, 1.0, 0.0,
+                                  0.5, 1.0, 1.5, 2.0, 1.5, 1.5, 2.0, 1.5,
+                                  2.0, 2.5, 3.0, 2.5, 2.5, 3.0, 2.5, 3.0};
 
-    Interfaces<double> interfaces = generate_interfaces();
+    Interfaces<Ibis::real> interfaces = generate_interfaces();
     auto interfaces_mirror = interfaces.host_mirror();
     interfaces_mirror.deep_copy(interfaces);
     auto centre_mirror = interfaces_mirror.centre();

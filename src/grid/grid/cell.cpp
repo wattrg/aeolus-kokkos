@@ -4,23 +4,23 @@
 #include <grid/interface.h>
 
 struct CellInfo {
-    Vertices<double> vertices;
-    Interfaces<double> interfaces;
-    Cells<double> cells;
+    Vertices<Ibis::real> vertices;
+    Interfaces<Ibis::real> interfaces;
+    Cells<Ibis::real> cells;
 };
 
 CellInfo generate_cells() {
-    Vertices<double> vertices(16);
+    Vertices<Ibis::real> vertices(16);
     auto vertices_host = vertices.host_mirror();
-    std::vector<Vector3<double>> vertex_pos{
-        Vector3<double>(0.0, 0.0, 0.0), Vector3<double>(1.0, 0.0, 0.0),
-        Vector3<double>(2.0, 0.0, 0.0), Vector3<double>(3.0, 0.0, 0.0),
-        Vector3<double>(0.0, 1.0, 0.0), Vector3<double>(1.0, 1.0, 0.0),
-        Vector3<double>(2.0, 1.0, 0.0), Vector3<double>(3.0, 1.0, 0.0),
-        Vector3<double>(0.0, 2.0, 0.0), Vector3<double>(1.0, 2.0, 0.0),
-        Vector3<double>(2.0, 2.0, 0.0), Vector3<double>(3.0, 2.0, 0.0),
-        Vector3<double>(0.0, 3.0, 0.0), Vector3<double>(1.0, 3.0, 0.0),
-        Vector3<double>(2.0, 3.0, 0.0), Vector3<double>(3.0, 3.0, 0.0)};
+    std::vector<Vector3<Ibis::real>> vertex_pos{
+        Vector3<Ibis::real>(0.0, 0.0, 0.0), Vector3<Ibis::real>(1.0, 0.0, 0.0),
+        Vector3<Ibis::real>(2.0, 0.0, 0.0), Vector3<Ibis::real>(3.0, 0.0, 0.0),
+        Vector3<Ibis::real>(0.0, 1.0, 0.0), Vector3<Ibis::real>(1.0, 1.0, 0.0),
+        Vector3<Ibis::real>(2.0, 1.0, 0.0), Vector3<Ibis::real>(3.0, 1.0, 0.0),
+        Vector3<Ibis::real>(0.0, 2.0, 0.0), Vector3<Ibis::real>(1.0, 2.0, 0.0),
+        Vector3<Ibis::real>(2.0, 2.0, 0.0), Vector3<Ibis::real>(3.0, 2.0, 0.0),
+        Vector3<Ibis::real>(0.0, 3.0, 0.0), Vector3<Ibis::real>(1.0, 3.0, 0.0),
+        Vector3<Ibis::real>(2.0, 3.0, 0.0), Vector3<Ibis::real>(3.0, 3.0, 0.0)};
 
     for (size_t i = 0; i < 16; i++) {
         vertices_host.positions().x(i) = vertex_pos[i].x;
@@ -41,7 +41,7 @@ CellInfo generate_cells() {
         ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
         ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
     };
-    Interfaces<double> interfaces(interface_id_list, shapes);
+    Interfaces<Ibis::real> interfaces(interface_id_list, shapes);
 
     std::vector<std::vector<size_t>> cell_interfaces_list{
         {0, 1, 2, 3},     {4, 5, 6, 1},     {7, 8, 9, 5},
@@ -57,7 +57,7 @@ CellInfo generate_cells() {
         ElemType::Quad, ElemType::Quad, ElemType::Quad, ElemType::Quad,
     };
 
-    Cells<double> cells(cell_vertex_ids_raw, cell_interfaces_list, cell_shapes, 9, 0);
+    Cells<Ibis::real> cells(cell_vertex_ids_raw, cell_interfaces_list, cell_shapes, 9, 0);
     CellInfo info;
     info.vertices = vertices;
     info.interfaces = interfaces;
@@ -67,9 +67,9 @@ CellInfo generate_cells() {
 
 TEST_CASE("cell volume") {
     CellInfo info = generate_cells();
-    Cells<double> cells = info.cells;
-    Interfaces<double> faces = info.interfaces;
-    Vertices<double> vertices = info.vertices;
+    Cells<Ibis::real> cells = info.cells;
+    Interfaces<Ibis::real> faces = info.interfaces;
+    Vertices<Ibis::real> vertices = info.vertices;
     cells.compute_volumes(vertices, faces);
     auto cells_mirror = cells.host_mirror();
     cells_mirror.deep_copy(cells);
@@ -81,16 +81,16 @@ TEST_CASE("cell volume") {
 
 TEST_CASE("cell_centre") {
     CellInfo info = generate_cells();
-    Cells<double> cells = info.cells;
-    Interfaces<double> faces = info.interfaces;
-    Vertices<double> vertices = info.vertices;
+    Cells<Ibis::real> cells = info.cells;
+    Interfaces<Ibis::real> faces = info.interfaces;
+    Vertices<Ibis::real> vertices = info.vertices;
 
     cells.compute_centroids(vertices, faces);
     auto cells_mirror = cells.host_mirror();
     cells_mirror.deep_copy(cells);
 
-    std::vector<double> x_values = {0.5, 1.5, 2.5, 0.5, 1.5, 2.5, 0.5, 1.5, 2.5};
-    std::vector<double> y_values = {0.5, 0.5, 0.5, 1.5, 1.5, 1.5, 2.5, 2.5, 2.5};
+    std::vector<Ibis::real> x_values = {0.5, 1.5, 2.5, 0.5, 1.5, 2.5, 0.5, 1.5, 2.5};
+    std::vector<Ibis::real> y_values = {0.5, 0.5, 0.5, 1.5, 1.5, 1.5, 2.5, 2.5, 2.5};
 
     for (size_t i = 0; i < cells.num_valid_cells(); i++) {
         CHECK(Kokkos::fabs(cells_mirror.centroids().x(i) - x_values[i]) < 1e-14);

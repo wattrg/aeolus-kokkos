@@ -2,7 +2,7 @@
 #include <util/numeric_types.h>
 
 template <typename T>
-void ConservedQuantitiesNorm<T>::write_to_file(std::ofstream& f, double time,
+void ConservedQuantitiesNorm<T>::write_to_file(std::ofstream& f, Ibis::real time,
                                                unsigned int step) {
     f << time << " " << step << " " << Ibis::real_part(mass()) << " "
       << Ibis::real_part(momentum_x()) << " " << Ibis::real_part(momentum_y()) << " "
@@ -23,7 +23,7 @@ ConservedQuantities<T>::ConservedQuantities(unsigned int n, unsigned int dim)
 
 template <typename T>
 void ConservedQuantities<T>::apply_time_derivative(const ConservedQuantities<T>& dudt,
-                                                   double dt) {
+                                                   Ibis::real dt) {
     Kokkos::parallel_for(
         "CQ::update_cq", num_values_, KOKKOS_CLASS_LAMBDA(const int i) {
             mass(i) += dudt.mass(i) * dt;

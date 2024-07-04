@@ -65,7 +65,7 @@ public:
                       ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d);
 
 private:
-    double delta_;
+    Ibis::real delta_;
 };
 
 template <typename T>

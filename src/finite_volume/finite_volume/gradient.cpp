@@ -24,17 +24,17 @@ json build_config() {
 
 TEST_CASE("gradient") {
     json config = build_config();
-    GridBlock<double> block_dev("../../../src/grid/test/grid.su2", config);
+    GridBlock<Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
     auto block_host = block_dev.host_mirror();
     block_host.deep_copy(block_dev);
-    WLSGradient<double> wls_gradient(block_dev);
+    WLSGradient<Ibis::real> wls_gradient(block_dev);
 
     // check host mirror compiles
     auto gradient_host = wls_gradient.host_mirror();
     gradient_host.deep_copy(wls_gradient);
 
     // fill in values to find the gradient of
-    Kokkos::View<double*> values("values", 21);
+    Kokkos::View<Ibis::real*> values("values", 21);
     auto values_host = Kokkos::create_mirror_view(values);
     values_host(0) = 1.0;
     values_host(1) = 2.0;
@@ -64,10 +64,10 @@ TEST_CASE("gradient") {
 
     Kokkos::deep_copy(values, values_host);
 
-    Kokkos::View<double*> grad_x("grad_x", 9);
-    Kokkos::View<double*> grad_y("grad_y", 9);
-    Kokkos::View<double*> grad_z("grad_z", 9);
-    Vector3s<double> grad(9);
+    Kokkos::View<Ibis::real*> grad_x("grad_x", 9);
+    Kokkos::View<Ibis::real*> grad_y("grad_y", 9);
+    Kokkos::View<Ibis::real*> grad_z("grad_z", 9);
+    Vector3s<Ibis::real> grad(9);
     wls_gradient.compute_gradients(block_dev, values, grad);
     auto grad_host = grad.host_mirror();
     grad_host.deep_copy(grad);

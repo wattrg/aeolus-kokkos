@@ -102,7 +102,7 @@ FVIO<T>::FVIO(FlowFormat input, FlowFormat output, int time_index)
 template <typename T>
 int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock<T>& grid,
                    const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
-                   double time) {
+                   Ibis::real time) {
     // get a copy of the flow states on the CPU
     auto fs_host = fs.host_mirror();
     fs_host.deep_copy(fs);
@@ -186,4 +186,4 @@ void FVOutput<T>::add_variable(std::string name) {
     }
 }
 
-template class FVIO<double>;
+template class FVIO<Ibis::real>;

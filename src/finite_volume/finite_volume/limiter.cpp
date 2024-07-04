@@ -64,50 +64,6 @@ void BarthJespersen<T>::calculate_limiters(const Ibis::SubArray2D<T> values,
 template class BarthJespersen<Ibis::real>;
 template class BarthJespersen<Ibis::dual>;
 
-// template <typename T>
-// void Venkat<T>::calculate_limiters(const Ibis::SubArray2D<T> values, Field<T>& limits,
-//                                    const Cells<T>& cells, const Interfaces<T>& faces,
-//                                    Vector3s<T>& grad) {
-//     double K = K_;
-//     Kokkos::parallel_for(
-//         "Limiter::venkat", cells.num_valid_cells(),
-//         KOKKOS_LAMBDA(const size_t cell_i){
-//             T Ui = values(cell_i);
-//             T U_min = Ui;
-//             T U_max = Ui;
-//             for (size_t j = 0; j < cells.neighbour_cells(cell_i).size(); j++) {
-//                 size_t neighbour_cell = cells.neighbour_cells(cell_i, j);
-//                 U_min = Ibis::min(U_min, values(neighbour_cell));
-//                 U_max = Ibis::max(U_max, values(neighbour_cell));
-//             }
-//             T delta_1_max = U_max - Ui;
-//             T delta_1_min = U_min - Ui;
-
-//             T phi = 1.0;
-//             T x = cells.centroids().x(cell_i);
-//             T y = cells.centroids().y(cell_i);
-//             T z = cells.centroids().z(cell_i);
-//             T eps2 = K * K * K * cells.volume(cell_i);
-//             auto face_ids = cells.faces().face_ids(cell_i);
-//             for (size_t j = 0; j < face_ids.size(); j++){
-//                 int i_face = face_ids(j);
-//                 T dx = faces.centre().x(i_face) - x;
-//                 T dy = faces.centre().y(i_face) - y;
-//                 T dz = faces.centre().z(i_face) - z;
-//                 T delta_2 =
-//                     grad.x(cell_i) * dx + grad.y(cell_i) * dy + grad.z(cell_i) * dz;
-//                 if (delta_2 > 0) {
-//                     // nothing for the moment
-//                 }
-//                 else if (delta_2 > 0) {
-//                     // nothing for the moment
-//                 }
-//             }
-//             limits(cell_i) = phi;
-//         });
-// }
-// template class Venkat<double>;
-
 template <typename T>
 void Unlimited<T>::calculate_limiters(const Ibis::SubArray2D<T> values, Field<T>& limits,
                                       const Cells<T>& cells, const Interfaces<T>& faces,

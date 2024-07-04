@@ -140,23 +140,23 @@ ElemIO read_su2_element(std::string line) {
     return ElemIO(vertex_ids, type, FaceOrder::Vtk);
 }
 
-Vector3<double> read_vertex(std::string line, size_t dim) {
+Vector3<Ibis::real> read_vertex(std::string line, size_t dim) {
     if (dim == 2) {
         size_t sep = line.find(" ");
-        double x = std::stod(line.substr(0, sep));
-        double y = std::stod(line.substr(sep));
+        Ibis::real x = std::stod(line.substr(0, sep));
+        Ibis::real y = std::stod(line.substr(sep));
         return Vector3(x, y, 0.0);
     } else if (dim == 3) {
         size_t sep = line.find(" ");
-        double x = std::stod(line.substr(0, sep));
+        Ibis::real x = std::stod(line.substr(0, sep));
         line = line.substr(sep + 1, std::string::npos);
 
         sep = line.find(" ");
-        double y = std::stod(line.substr(0, sep));
+        Ibis::real y = std::stod(line.substr(0, sep));
         line = line.substr(sep + 1, std::string::npos);
 
         sep = line.find(" ");
-        double z = std::stod(line.substr(0, sep));
+        Ibis::real z = std::stod(line.substr(0, sep));
         return Vector3(x, y, z);
     } else {
         std::cerr << "Invalid number of dimensions in su2 file: " << dim << std::endl;
@@ -399,7 +399,7 @@ TEST_CASE("read_su2_boundary_marker") {
 }
 
 TEST_CASE("read_su2_grid") {
-    std::vector<Vertex<double>> vertices{
+    std::vector<Vertex<Ibis::real>> vertices{
         Vertex(Vector3(0.0, 0.0, 0.0)), Vertex(Vector3(1.0, 0.0, 0.0)),
         Vertex(Vector3(2.0, 0.0, 0.0)), Vertex(Vector3(3.0, 0.0, 0.0)),
         Vertex(Vector3(0.0, 1.0, 0.0)), Vertex(Vector3(1.0, 1.0, 0.0)),

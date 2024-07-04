@@ -12,12 +12,12 @@
 #include <limits>
 
 // Implementation of Butcher tableau
-double ButcherTableau::a(size_t i, size_t j) { return a_[i - 1][j]; }
-double ButcherTableau::b(size_t i) { return b_[i]; }
-double ButcherTableau::c(size_t i) { return c_[i - 1]; }
+Ibis::real ButcherTableau::a(size_t i, size_t j) { return a_[i - 1][j]; }
+Ibis::real ButcherTableau::b(size_t i) { return b_[i]; }
+Ibis::real ButcherTableau::c(size_t i) { return c_[i - 1]; }
 size_t ButcherTableau::num_stages() { return num_stages_; }
 
-RungeKutta::RungeKutta(json config, GridBlock<double>& grid, std::string grid_dir,
+RungeKutta::RungeKutta(json config, GridBlock<Ibis::real>& grid, std::string grid_dir,
                        std::string flow_dir)
     : Solver(grid_dir, flow_dir) {
     // configuration
@@ -36,22 +36,22 @@ RungeKutta::RungeKutta(json config, GridBlock<double>& grid, std::string grid_di
     tableau_ = ButcherTableau(solver_config.at("butcher_tableau"));
 
     // gas_model
-    gas_model_ = IdealGas<double>(config.at("gas_model"));
-    trans_prop_ = TransportProperties<double>(config.at("transport_properties"));
+    gas_model_ = IdealGas<Ibis::real>(config.at("gas_model"));
+    trans_prop_ = TransportProperties<Ibis::real>(config.at("transport_properties"));
 
     // memory
     grid_ = grid;
     int number_cells = grid_.num_total_cells();
     int dim = grid_.dim();
-    flow_ = FlowStates<double>(number_cells);
-    conserved_quantities_ = ConservedQuantities<double>(number_cells, dim);
-    k_ = std::vector<ConservedQuantities<double>>(
-        tableau_.num_stages(), ConservedQuantities<double>(number_cells, dim));
+    flow_ = FlowStates<Ibis::real>(number_cells);
+    conserved_quantities_ = ConservedQuantities<Ibis::real>(number_cells, dim);
+    k_ = std::vector<ConservedQuantities<Ibis::real>>(
+        tableau_.num_stages(), ConservedQuantities<Ibis::real>(number_cells, dim));
     if (tableau_.num_stages() > 1) {
-        k_tmp_ = ConservedQuantities<double>(number_cells, dim);
-        flow_tmp_ = FlowStates<double>(number_cells);
+        k_tmp_ = ConservedQuantities<Ibis::real>(number_cells, dim);
+        flow_tmp_ = FlowStates<Ibis::real>(number_cells);
     }
-    fv_ = FiniteVolume<double>(grid_, config);
+    fv_ = FiniteVolume<Ibis::real>(grid_, config);
 
     // progress
     time_since_last_plot_ = 0.0;
@@ -59,7 +59,7 @@ RungeKutta::RungeKutta(json config, GridBlock<double>& grid, std::string grid_di
 
     // input/output
     FlowFormat flow_format = string_to_flow_format((config.at("io").at("flow_format")));
-    io_ = FVIO<double>(flow_format, flow_format, 1);
+    io_ = FVIO<Ibis::real>(flow_format, flow_format, 1);
 }
 
 int RungeKutta::initialise() {
@@ -68,7 +68,7 @@ int RungeKutta::initialise() {
     int ic_result = io_.read(flow_, grid_, gas_model_, trans_prop_, meta_data, 0);
     int conversion_result =
         primatives_to_conserved(conserved_quantities_, flow_, gas_model_);
-    dt_ = (dt_init_ > 0) ? dt_init_ : std::numeric_limits<double>::max();
+    dt_ = (dt_init_ > 0) ? dt_init_ : std::numeric_limits<Ibis::real>::max();
 
     // compute the initial residuals, and begin the residuals file
     if (residuals_every_n_steps_ > 0 || residual_frequency_ > 0) {
@@ -91,7 +91,7 @@ void RungeKutta::estimate_dt() {
     //   2. 1.5 x the previous time step
     //   3. The time till the next plot needs to be written
     stable_dt_ = fv_.estimate_dt(flow_, grid_, gas_model_, trans_prop_);
-    double dt_startup = Ibis::min(cfl_->eval(t_) * stable_dt_, 1.5 * dt_);
+    Ibis::real dt_startup = Ibis::min(cfl_->eval(t_) * stable_dt_, 1.5 * dt_);
     dt_ = Ibis::min(dt_startup, max_time_ - t_);
     if (plot_frequency_ > 0.0 && time_since_last_plot_ < plot_frequency_) {
         dt_ = Ibis::min(dt_, plot_frequency_ - time_since_last_plot_);
@@ -163,7 +163,7 @@ bool RungeKutta::residuals_this_step(unsigned int step) {
 
 bool RungeKutta::write_residuals(unsigned int step) {
     spdlog::debug("Writing residuals at step {}", step);
-    ConservedQuantitiesNorm<double> norms = L2_norms();
+    ConservedQuantitiesNorm<Ibis::real> norms = L2_norms();
     std::ofstream residual_file("log/residuals.dat", std::ios_base::app);
     norms.write_to_file(residual_file, t_, step);
     time_since_last_residual_ = 0;
@@ -186,7 +186,7 @@ int RungeKutta::plot_solution(unsigned int step) {
     return result;
 }
 
-void RungeKutta::print_progress(unsigned int step, double wc) {
+void RungeKutta::print_progress(unsigned int step, Ibis::real wc) {
     spdlog::info(
         "  step: {:>8}, t = {:.6e} ({:.1f}%), dt = {:.6e} (cfl={:.1f}), wc = "
         "{:.1f}s",
@@ -205,4 +205,4 @@ bool RungeKutta::stop_now(unsigned int step) {
     return false;
 }
 
-ConservedQuantitiesNorm<double> RungeKutta::L2_norms() { return k_[0].L2_norms(); }
+ConservedQuantitiesNorm<Ibis::real> RungeKutta::L2_norms() { return k_[0].L2_norms(); }

@@ -67,7 +67,7 @@ std::unique_ptr<Solver> make_solver(json config, std::string grid_dir,
     json grid_config = config.at("grid");
     std::string solver_name = solver_config.at("name");
     if (solver_name == "runge_kutta") {
-        GridBlock<double> grid(grid_file, grid_config);
+        GridBlock<Ibis::real> grid(grid_file, grid_config);
         return std::unique_ptr<Solver>(new RungeKutta(config, grid, grid_dir, flow_dir));
     }
     return NULL;

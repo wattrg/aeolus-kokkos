@@ -8,6 +8,7 @@
 #include <io/io.h>
 #include <solvers/cfl.h>
 #include <solvers/solver.h>
+#include <util/numeric_types.h>
 
 #include <memory>
 
@@ -15,8 +16,8 @@ class ButcherTableau {
 public:
     ButcherTableau() {}
 
-    ButcherTableau(std::vector<std::vector<double>> a, std::vector<double> b,
-                   std::vector<double> c)
+    ButcherTableau(std::vector<std::vector<Ibis::real>> a, std::vector<Ibis::real> b,
+                   std::vector<Ibis::real> c)
         : a_(a), b_(b), c_(c) {
         num_stages_ = b_.size();
     }
@@ -24,21 +25,21 @@ public:
     ButcherTableau(json config)
         : ButcherTableau(config.at("a"), config.at("b"), config.at("c")) {}
 
-    double a(size_t i, size_t j);
-    double b(size_t i);
-    double c(size_t i);
+    Ibis::real a(size_t i, size_t j);
+    Ibis::real b(size_t i);
+    Ibis::real c(size_t i);
     size_t num_stages();
 
 private:
-    std::vector<std::vector<double>> a_;
-    std::vector<double> b_;
-    std::vector<double> c_;
+    std::vector<std::vector<Ibis::real>> a_;
+    std::vector<Ibis::real> b_;
+    std::vector<Ibis::real> c_;
     size_t num_stages_;
 };
 
 class RungeKutta : public Solver {
 public:
-    RungeKutta(json config, GridBlock<double>& grid, std::string grid_dir,
+    RungeKutta(json config, GridBlock<Ibis::real>& grid, std::string grid_dir,
                std::string flow_dir);
 
     ~RungeKutta() {}
@@ -47,27 +48,27 @@ public:
 
 private:
     // configuration
-    double max_time_;
+    Ibis::real max_time_;
     unsigned int max_step_;
     unsigned int print_frequency_;
-    double plot_frequency_;
-    double residual_frequency_;
+    Ibis::real plot_frequency_;
+    Ibis::real residual_frequency_;
     int residuals_every_n_steps_;
     int plot_every_n_steps_;
     std::unique_ptr<CflSchedule> cfl_;
-    double dt_init_;
+    Ibis::real dt_init_;
 
 private:
     // progress
-    double time_since_last_plot_;
-    double time_since_last_residual_;
-    double t_;
-    double dt_;
-    double stable_dt_;
+    Ibis::real time_since_last_plot_;
+    Ibis::real time_since_last_residual_;
+    Ibis::real t_;
+    Ibis::real dt_;
+    Ibis::real stable_dt_;
 
 private:
     // input/output
-    FVIO<double> io_;
+    FVIO<Ibis::real> io_;
 
 private:
     // implementation
@@ -78,7 +79,7 @@ private:
     bool print_this_step(unsigned int step);
     bool plot_this_step(unsigned int step);
     int plot_solution(unsigned int step);
-    void print_progress(unsigned int step, double wc);
+    void print_progress(unsigned int step, Ibis::real wc);
     std::string stop_reason(unsigned int step);
     bool stop_now(unsigned int step);
     int max_step() const { return max_step_; }
@@ -87,30 +88,30 @@ private:
     // this computes the L2 norms of the time derivates evaluated
     // at the beginning of the previous step (essential whatever is in k_[0]).
     // It should be called after taking a step, so the
-    ConservedQuantitiesNorm<double> L2_norms();
+    ConservedQuantitiesNorm<Ibis::real> L2_norms();
 
     bool residuals_this_step(unsigned int step);
     bool write_residuals(unsigned int step);
 
 private:
     // memory
-    FlowStates<double> flow_;
-    ConservedQuantities<double> conserved_quantities_;
-    std::vector<ConservedQuantities<double>> k_;
-    ConservedQuantities<double> k_tmp_;
-    FlowStates<double> flow_tmp_;
+    FlowStates<Ibis::real> flow_;
+    ConservedQuantities<Ibis::real> conserved_quantities_;
+    std::vector<ConservedQuantities<Ibis::real>> k_;
+    ConservedQuantities<Ibis::real> k_tmp_;
+    FlowStates<Ibis::real> flow_tmp_;
 
     // butcher tableau
     ButcherTableau tableau_;
 
 private:
     // spatial discretisation
-    GridBlock<double> grid_;
-    FiniteVolume<double> fv_;
+    GridBlock<Ibis::real> grid_;
+    FiniteVolume<Ibis::real> fv_;
 
 private:
-    IdealGas<double> gas_model_;
-    TransportProperties<double> trans_prop_;
+    IdealGas<Ibis::real> gas_model_;
+    TransportProperties<Ibis::real> trans_prop_;
 };
 
 #endif

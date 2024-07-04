@@ -1,11 +1,11 @@
 #include <doctest/doctest.h>
 #include <grid/geom.h>
 
-const double EPS = 1e-15;
+const Ibis::real EPS = 1e-15;
 
 TEST_CASE("distance_between_points") {
     // allocate positions
-    Vector3s<double> pos{"pos", 10};
+    Vector3s<Ibis::real> pos{"pos", 10};
     auto pos_host = pos.host_mirror();
     for (int i = 0; i < 10; i++) {
         pos_host.x(i) = 3 * i;
@@ -33,7 +33,7 @@ TEST_CASE("distance_between_points") {
     j.deep_copy(j_host);
 
     // do the calculations
-    Field<double> results("results", 5);
+    Field<Ibis::real> results("results", 5);
     Kokkos::parallel_for(
         "distance", 5, KOKKOS_LAMBDA(const int id) {
             results(id) = Ibis::distance_between_points(pos, i(id), j(id));

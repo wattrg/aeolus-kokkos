@@ -1,10 +1,9 @@
 #include <finite_volume/boundaries/boundary.h>
 #include <gas/transport_properties.h>
-#include <util/numeric_types.h>
 #include <spdlog/spdlog.h>
+#include <util/numeric_types.h>
 
 #include <Kokkos_Core.hpp>
-
 
 template <typename T>
 FlowStateCopy<T>::FlowStateCopy(json flow_state) {

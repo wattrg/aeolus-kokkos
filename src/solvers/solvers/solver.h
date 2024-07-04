@@ -34,7 +34,7 @@ protected:
     virtual bool residuals_this_step(unsigned int step) = 0;
     virtual bool write_residuals(unsigned int step) = 0;
     virtual int plot_solution(unsigned int step) = 0;
-    virtual void print_progress(unsigned int step, double wc) = 0;
+    virtual void print_progress(unsigned int step, Ibis::real wc) = 0;
     virtual bool stop_now(unsigned int step) = 0;
     virtual std::string stop_reason(unsigned step) = 0;
     virtual int max_step() const = 0;

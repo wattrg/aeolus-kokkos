@@ -13,7 +13,7 @@ T PressureAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& f
     (void)grid;
     return fs.gas.pressure(i);
 }
-template class PressureAccess<double>;
+template class PressureAccess<Ibis::real>;
 
 template <typename T>
 T TemperatureAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -25,7 +25,7 @@ T TemperatureAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>
     (void)grid;
     return fs.gas.temp(i);
 }
-template class TemperatureAccess<double>;
+template class TemperatureAccess<Ibis::real>;
 
 template <typename T>
 T DensityAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -37,7 +37,7 @@ T DensityAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs
     (void)grid;
     return fs.gas.rho(i);
 }
-template class DensityAccess<double>;
+template class DensityAccess<Ibis::real>;
 
 template <typename T>
 T InternalEnergyAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -49,7 +49,7 @@ T InternalEnergyAccess<T>::access(const FlowStates<T, array_layout, host_mem_spa
     (void)grid;
     return fs.gas.energy(i);
 }
-template class InternalEnergyAccess<double>;
+template class InternalEnergyAccess<Ibis::real>;
 
 template <typename T>
 T SpeedOfSoundAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -60,7 +60,7 @@ T SpeedOfSoundAccess<T>::access(const FlowStates<T, array_layout, host_mem_space
     (void)grid;
     return gas_model.speed_of_sound(fs.gas, i);
 }
-template class SpeedOfSoundAccess<double>;
+template class SpeedOfSoundAccess<Ibis::real>;
 
 template <typename T>
 T MachNumberAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -76,7 +76,7 @@ T MachNumberAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>&
     T v_mag = Ibis::sqrt(vx * vx + vy * vy + vz * vz);
     return v_mag / a;
 }
-template class MachNumberAccess<double>;
+template class MachNumberAccess<Ibis::real>;
 
 template <typename T>
 Vector3<T> VelocityAccess<T>::access(
@@ -91,7 +91,7 @@ Vector3<T> VelocityAccess<T>::access(
     T z = fs.vel.z(i);
     return Vector3<T>(x, y, z);
 }
-template class VelocityAccess<double>;
+template class VelocityAccess<Ibis::real>;
 
 template <typename T>
 void ViscousGradVxAccess<T>::init(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -121,7 +121,7 @@ Vector3<T> ViscousGradVxAccess<T>::access(
     T grad_z = grad_vx_.z(i);
     return Vector3<T>(grad_x, grad_y, grad_z);
 }
-template class ViscousGradVxAccess<double>;
+template class ViscousGradVxAccess<Ibis::real>;
 
 template <typename T>
 void ViscousGradVyAccess<T>::init(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -151,7 +151,7 @@ Vector3<T> ViscousGradVyAccess<T>::access(
     T grad_z = grad_vy_.z(i);
     return Vector3<T>(grad_x, grad_y, grad_z);
 }
-template class ViscousGradVyAccess<double>;
+template class ViscousGradVyAccess<Ibis::real>;
 
 template <typename T>
 void ViscousGradVzAccess<T>::init(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -181,7 +181,7 @@ Vector3<T> ViscousGradVzAccess<T>::access(
     T grad_z = grad_vz_.z(i);
     return Vector3<T>(grad_x, grad_y, grad_z);
 }
-template class ViscousGradVzAccess<double>;
+template class ViscousGradVzAccess<Ibis::real>;
 
 template <typename T>
 void ConvectiveGradVxAccess<T>::init(
@@ -211,7 +211,7 @@ Vector3<T> ConvectiveGradVxAccess<T>::access(
     T grad_z = grad_vx_.z(i);
     return Vector3<T>(grad_x, grad_y, grad_z);
 }
-template class ConvectiveGradVxAccess<double>;
+template class ConvectiveGradVxAccess<Ibis::real>;
 
 template <typename T>
 void ConvectiveGradVyAccess<T>::init(
@@ -241,7 +241,7 @@ Vector3<T> ConvectiveGradVyAccess<T>::access(
     T grad_z = grad_vy_.z(i);
     return Vector3<T>(grad_x, grad_y, grad_z);
 }
-template class ConvectiveGradVyAccess<double>;
+template class ConvectiveGradVyAccess<Ibis::real>;
 
 template <typename T>
 void ConvectiveGradVzAccess<T>::init(
@@ -272,7 +272,7 @@ Vector3<T> ConvectiveGradVzAccess<T>::access(
     T grad_z = grad_vz_.z(i);
     return Vector3<T>(grad_x, grad_y, grad_z);
 }
-template class ConvectiveGradVzAccess<double>;
+template class ConvectiveGradVzAccess<Ibis::real>;
 
 template <typename T>
 Vector3<T> CellCentreAccess<T>::access(
@@ -288,7 +288,7 @@ Vector3<T> CellCentreAccess<T>::access(
     T z = grid.cells().centroids().z(i);
     return Vector3<T>(x, y, z);
 }
-template class CellCentreAccess<double>;
+template class CellCentreAccess<Ibis::real>;
 
 template <typename T>
 std::map<std::string, std::shared_ptr<ScalarAccessor<T>>> get_scalar_accessors() {
@@ -300,12 +300,12 @@ std::map<std::string, std::shared_ptr<ScalarAccessor<T>>> get_scalar_accessors()
         {"a", std::shared_ptr<ScalarAccessor<T>>(new SpeedOfSoundAccess<T>())},
         {"Mach", std::shared_ptr<ScalarAccessor<T>>(new MachNumberAccess<T>())}};
 }
-template std::map<std::string, std::shared_ptr<ScalarAccessor<double>>>
+template std::map<std::string, std::shared_ptr<ScalarAccessor<Ibis::real>>>
 get_scalar_accessors();
 
 template <typename T>
 std::map<std::string, std::shared_ptr<VectorAccessor<T>>> get_vector_accessors() {
     return {{"velocity", std::shared_ptr<VectorAccessor<T>>(new VelocityAccess<T>())}};
 }
-template std::map<std::string, std::shared_ptr<VectorAccessor<double>>>
+template std::map<std::string, std::shared_ptr<VectorAccessor<Ibis::real>>>
 get_vector_accessors();
