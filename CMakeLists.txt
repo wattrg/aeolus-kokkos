@@ -65,6 +65,7 @@ endif()
 # add all the source code
 add_subdirectory(src/gas)
 add_subdirectory(src/util)
+add_subdirectory(src/linear_algebra)
 add_subdirectory(src/grid)
 add_subdirectory(src/finite_volume)
 add_subdirectory(src/ibis/)
