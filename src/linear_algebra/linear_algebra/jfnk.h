@@ -5,8 +5,8 @@
 #include <gas/flow_state.h>
 #include <gas/transport_properties.h>
 #include <io/io.h>
-#include <solvers/cfl.h>
 #include <solver.h>
+#include <solvers/cfl.h>
 #include <util/numeric_types.h>
 
 #include <memory>

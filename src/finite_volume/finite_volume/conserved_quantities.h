@@ -107,6 +107,14 @@ public:
     // ConservedQuantitiesNorm<Ibis::real> Linf_norms() const;
 
     KOKKOS_INLINE_FUNCTION
+    T& operator()(const size_t cell_i, const size_t cq_i) { return cq_(cell_i, cq_i); }
+
+    KOKKOS_INLINE_FUNCTION
+    T& operator()(const size_t cell_i, const size_t cq_i) const {
+        return cq_(cell_i, cq_i);
+    }
+
+    KOKKOS_INLINE_FUNCTION
     T& mass(int cell_i) const { return cq_(cell_i, mass_idx_); }
 
     KOKKOS_INLINE_FUNCTION

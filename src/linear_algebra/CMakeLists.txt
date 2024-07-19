@@ -3,7 +3,7 @@ add_library(
     STATIC
     linear_algebra/gmres.cpp 
 )
-target_link_libraries(linear_algebra PUBLIC Kokkos::kokkos doctest)
+target_link_libraries(linear_algebra PUBLIC Kokkos::kokkos doctest util finite_volume)
 target_include_directories(linear_algebra PUBLIC .)
 
 

@@ -205,6 +205,12 @@ public:
     T dual() const { return this->dual_; }
 
     KOKKOS_INLINE_FUNCTION
+    T& real() { return this->real_; }
+
+    KOKKOS_INLINE_FUNCTION
+    T& dual() { return this->dual_; }
+
+    KOKKOS_INLINE_FUNCTION
     T abs() const { return Kokkos::sqrt(this->real_ * this->real_ + dual_ * dual_); }
 
     KOKKOS_INLINE_FUNCTION

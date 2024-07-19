@@ -1,10 +1,18 @@
-add_library(solver STATIC solvers/solver.cpp solvers/solver.h solvers/cfl.cpp)
+add_library(
+	solver
+	STATIC
+	solvers/solver.cpp
+	solvers/solver.h
+	solvers/cfl.cpp
+	solvers/steady_state.cpp
+)
 
 target_link_libraries(
 	solver 
 	PUBLIC 
 	Kokkos::kokkos 
 	nlohmann_json::nlohmann_json 
+	linear_algebra
 	grid 
 	gas
 	spdlog::spdlog
