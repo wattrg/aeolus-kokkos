@@ -6,6 +6,7 @@
 #include <gas/transport_properties.h>
 #include <util/field.h>
 #include <util/numeric_types.h>
+#include "finite_volume/conserved_quantities.h"
 
 class SystemLinearisation {
 public:
@@ -14,7 +15,6 @@ public:
     virtual ~SystemLinearisation() {}
 
     virtual void matrix_vector_product(FiniteVolume<Ibis::dual>& fv,
-                                       FlowStates<Ibis::dual>& fs,
                                        ConservedQuantities<Ibis::dual>& cq,
                                        const GridBlock<Ibis::dual>& grid,
                                        IdealGas<Ibis::dual>& gas_model,
@@ -25,6 +25,7 @@ public:
                           const GridBlock<Ibis::dual>& grid,
                           IdealGas<Ibis::dual>& gas_model,
                           TransportProperties<Ibis::dual>& trans_prop,
+                          ConservedQuantities<Ibis::dual>& residual,
                           Field<Ibis::real>& vec) = 0;
 };
 
