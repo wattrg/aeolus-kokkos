@@ -25,7 +25,7 @@ public:
                           const GridBlock<Ibis::dual>& grid,
                           IdealGas<Ibis::dual>& gas_model,
                           TransportProperties<Ibis::dual>& trans_prop,
-                          ConservedQuantities<Ibis::dual>& residual,
+                          ConservedQuantities<Ibis::dual>& residuals,
                           Field<Ibis::real>& vec) = 0;
 };
 

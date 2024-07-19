@@ -28,7 +28,7 @@ public:
                   const GridBlock<Ibis::dual>& grid, IdealGas<Ibis::dual>& gas_model,
                   TransportProperties<Ibis::dual>& trans_prop,
                   ConservedQuantities<Ibis::dual>& residuals,
-                  Field<Ibis::real>& vec) = 0;
+                  Field<Ibis::real>& vec);
 
 public:
     // some specific methods
@@ -99,6 +99,9 @@ private:
     // gas models
     IdealGas<Ibis::dual> gas_model_;
     TransportProperties<Ibis::dual> trans_prop_;
+
+    // linearisation
+    SteadyStateLinearisation linearisation_;
 };
 
 #endif
