@@ -3,6 +3,7 @@
 #include <finite_volume/primative_conserved_conversion.h>
 #include <gas/transport_properties.h>
 #include <solvers/steady_state.h>
+
 #include "gas/flow_state.h"
 
 SteadyStateLinearisation::SteadyStateLinearisation(const size_t n_cells,
@@ -17,11 +18,9 @@ SteadyStateLinearisation::SteadyStateLinearisation(const size_t n_cells,
 }
 
 void SteadyStateLinearisation::matrix_vector_product(
-    FiniteVolume<Ibis::dual>& fv,
-    ConservedQuantities<Ibis::dual>& cq, const GridBlock<Ibis::dual>& grid,
-    IdealGas<Ibis::dual>& gas_model, TransportProperties<Ibis::dual>& trans_prop,
-    Field<Ibis::real>& vec) {
-
+    FiniteVolume<Ibis::dual>& fv, ConservedQuantities<Ibis::dual>& cq,
+    const GridBlock<Ibis::dual>& grid, IdealGas<Ibis::dual>& gas_model,
+    TransportProperties<Ibis::dual>& trans_prop, Ibis::Vector<Ibis::real>& vec) {
     // set the dual components of the conserved quantities
     size_t n_cons = n_cons_;
     auto residuals = residuals_;
@@ -58,7 +57,7 @@ void SteadyStateLinearisation::eval_rhs(FiniteVolume<Ibis::dual>& fv,
                                         IdealGas<Ibis::dual>& gas_model,
                                         TransportProperties<Ibis::dual>& trans_prop,
                                         ConservedQuantities<Ibis::dual>& residuals,
-                                        Field<Ibis::real>& vec) {
+                                        Ibis::Vector<Ibis::real>& vec) {
     fv.compute_dudt(fs, grid, residuals, gas_model, trans_prop);
 
     size_t n_cons = n_cons_;

@@ -29,6 +29,12 @@ template <typename T, class Layout = Kokkos::DefaultExecutionSpace::array_layout
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 using ArrayNby3 = Kokkos::View<T* [3], Layout, Space>;
 
+template <typename T, class Layout = DefaultArrayLayout, class Space = DefaultMemSpace>
+using Vector = Array1D<T, Layout, Space>;
+
+template <typename T, class Layout = DefaultArrayLayout, class Space = DefaultMemSpace>
+using Matrix = Array2D<T, Layout, Space>;
+
 }  // namespace Ibis
 
 #endif

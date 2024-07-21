@@ -1,10 +1,11 @@
 #ifndef STEADY_STATE_SOLVER_H
 #define STEADY_STATE_SOLVER_H
 
-#include <linear_algebra/linear_system.h>
 #include <finite_volume/conserved_quantities.h>
 #include <gas/flow_state.h>
+#include <linear_algebra/linear_system.h>
 #include <solvers/solver.h>
+
 #include "gas/transport_properties.h"
 #include "io/io.h"
 #include "solvers/cfl.h"
@@ -22,13 +23,14 @@ public:
                                const GridBlock<Ibis::dual>& grid,
                                IdealGas<Ibis::dual>& gas_model,
                                TransportProperties<Ibis::dual>& trans_prop,
-                               Field<Ibis::real>& vec);
+                               Ibis::Vector<Ibis::real>& vec);
 
     void eval_rhs(FiniteVolume<Ibis::dual>& fv, FlowStates<Ibis::dual>& fs,
                   const GridBlock<Ibis::dual>& grid, IdealGas<Ibis::dual>& gas_model,
                   TransportProperties<Ibis::dual>& trans_prop,
-                  ConservedQuantities<Ibis::dual>& residuals,
-                  Field<Ibis::real>& vec);
+                  ConservedQuantities<Ibis::dual>& residuals, Ibis::Vector<Ibis::real>& vec);
+
+    size_t num_vars() const { return n_vars_; };
 
 public:
     // some specific methods
@@ -90,7 +92,7 @@ private:
     FlowStates<Ibis::dual> fs_;
 
     // The RHS vector
-    Field<Ibis::dual> rhs_;
+    Ibis::Vector<Ibis::dual> rhs_;
 
     // spatial discretisation
     GridBlock<Ibis::dual> grid_;
