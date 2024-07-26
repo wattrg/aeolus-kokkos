@@ -150,6 +150,8 @@ public:
     KOKKOS_INLINE_FUNCTION
     T& energy(int cell_i) { return cq_(cell_i, energy_idx_); }
 
+    void deep_copy(const ConservedQuantities<T>& other);
+
 private:
     Kokkos::View<T**> cq_;
     unsigned int mass_idx_, momentum_idx_, energy_idx_;

@@ -72,6 +72,7 @@ add_subdirectory(src/ibis/)
 add_subdirectory(src/solvers)
 add_subdirectory(src/io)
 add_subdirectory(src/python)
+add_subdirectory(src/simulation)
 add_subdirectory(share)
 
 # allow packaging to distribute a pre-compiled 

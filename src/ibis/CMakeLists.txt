@@ -19,6 +19,7 @@ target_link_libraries(
 	spdlog::spdlog
 	solver
 	IO
+	simulation
 	CLI11::CLI11
 )
 

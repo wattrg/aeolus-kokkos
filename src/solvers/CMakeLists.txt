@@ -17,6 +17,7 @@ target_link_libraries(
 	gas
 	spdlog::spdlog
 	IO
+	simulation
 )
 
 add_library(runge_kutta STATIC solvers/runge_kutta.cpp)

@@ -1,7 +1,8 @@
 #ifndef GMRES_H
 #define GMRES_H
 
-#include <linear_algebra/linear_solver.h>
+// #include <linear_algebra/linear_solver.h>
+#include <linear_algebra/linear_system.h>
 #include <util/numeric_types.h>
 #include <util/types.h>
 
@@ -18,12 +19,12 @@ struct GmresResult {
 
 class Gmres {
 public:
-    Gmres(const SystemLinearisation& system, const size_t max_iters, Ibis::real tol);
+    Gmres(const std::shared_ptr<LinearSystem> system, const size_t max_iters,
+          Ibis::real tol);
 
-    Gmres(const SystemLinearisation& system, json config);
+    Gmres(const std::shared_ptr<LinearSystem> system, json config);
 
-    GmresResult solve(SystemLinearisation& system, Ibis::Vector<Ibis::real>& x0,
-                      Ibis::Vector<Ibis::real>& b);
+    GmresResult solve(std::shared_ptr<LinearSystem> system, Ibis::Vector<Ibis::real>& x0);
 
 private:
     // configuration
@@ -31,9 +32,12 @@ private:
     size_t tol_;
     size_t num_vars_;
 
+
+public: // this has to be public to access from inside kernels
     // memory
     Ibis::Matrix<Ibis::real> krylov_vectors_;
     Ibis::Vector<Ibis::real> r0_;
+    Ibis::Vector<Ibis::real> w_;
 
     // least squares problem
     Ibis::Matrix<Ibis::real> H0_;
@@ -43,18 +47,7 @@ private:
     Ibis::Matrix<Ibis::real> Gamma_;
 
     // implementation
-    void compute_r0_(SystemLineariastion& system, Ibis::Vector<Ibis::real>& x0);
-};
-
-class FGmres {
-public:
-    FGmres(const SystemLinearisation& system, const size_t max_iters, Ibis::real tol);
-
-    GmresResult solve(SystemLinearisation& system);
-
-private:
-    size_t max_iters_;
-    size_t tol_;
+    void compute_r0_(std::shared_ptr<LinearSystem> system, Ibis::Vector<Ibis::real>& x0);
 };
 
 #endif

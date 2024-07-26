@@ -60,6 +60,11 @@ ConservedQuantitiesNorm<T> ConservedQuantities<T>::L2_norms() const {
     return norms;
 }
 
+template <typename T>
+void ConservedQuantities<T>::deep_copy(const ConservedQuantities<T>& other) {
+    Kokkos::deep_copy(cq_, other.cq_);
+}
+
 template class ConservedQuantities<Ibis::real>;
 template class ConservedQuantities<Ibis::dual>;
 

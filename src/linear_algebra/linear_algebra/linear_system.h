@@ -1,33 +1,29 @@
 #ifndef LINEAR_SYSTEM_H
 #define LINEAR_SYSTEM_H
 
-#include <finite_volume/finite_volume.h>
-#include <gas/gas_model.h>
-#include <gas/transport_properties.h>
-#include <util/types.h>
+#include <finite_volume/conserved_quantities.h>
+#include <simulation/simulation.h>
 #include <util/numeric_types.h>
+#include <util/types.h>
 
-#include "finite_volume/conserved_quantities.h"
-
-class SystemLinearisation {
+class LinearSystem {
 public:
-    SystemLinearisation(){};
+    LinearSystem(){};
 
-    virtual ~SystemLinearisation() {}
+    virtual ~LinearSystem() {}
 
-    virtual void matrix_vector_product(FiniteVolume<Ibis::dual>& fv,
-                                       ConservedQuantities<Ibis::dual>& cq,
-                                       const GridBlock<Ibis::dual>& grid,
-                                       IdealGas<Ibis::dual>& gas_model,
-                                       TransportProperties<Ibis::dual>& trans_prop,
-                                       Ibis::Vector<Ibis::real>& vec) = 0;
+    virtual void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
+                                       Ibis::Vector<Ibis::real>& result) = 0;
 
-    virtual void eval_rhs(FiniteVolume<Ibis::dual>& fv, FlowStates<Ibis::dual>&,
-                          const GridBlock<Ibis::dual>& grid,
-                          IdealGas<Ibis::dual>& gas_model,
-                          TransportProperties<Ibis::dual>& trans_prop,
-                          ConservedQuantities<Ibis::dual>& residuals,
-                          Ibis::Vector<Ibis::real>& vec) = 0;
+    virtual void eval_rhs() = 0;
+
+    KOKKOS_INLINE_FUNCTION
+    virtual Ibis::real& rhs(const size_t i) const = 0;
+
+    KOKKOS_INLINE_FUNCTION
+    virtual Ibis::real& rhs(const size_t cell_i, const size_t cons_i) const = 0;
+
+    virtual Ibis::Vector<Ibis::real>& rhs() = 0;
 
     virtual size_t num_vars() const = 0;
 };
