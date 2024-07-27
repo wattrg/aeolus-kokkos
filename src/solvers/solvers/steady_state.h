@@ -1,13 +1,15 @@
 #ifndef STEADY_STATE_SOLVER_H
 #define STEADY_STATE_SOLVER_H
 
+#include <solvers/solver.h>
 #include <finite_volume/conserved_quantities.h>
 #include <gas/flow_state.h>
 #include <io/io.h>
 #include <linear_algebra/linear_system.h>
 #include <simulation/simulation.h>
 #include <solvers/cfl.h>
-#include <solvers/solver.h>
+#include <solvers/jfnk.h>
+
 
 class SteadyStateLinearisation : public LinearSystem {
 public:
@@ -48,8 +50,9 @@ private:
     size_t n_cons_;
     size_t n_vars_;
     size_t dim_;
-    // ConservedQuantitiese<Ibis::dual> cq_;  // the current solution
-    FlowStates<Ibis::dual> fs_;     // the current solution
+    // ConservedQuantitiese<Ibis::dual> cq_;  // the current solution (not owned)
+    FlowStates<Ibis::dual> fs_;     // the current solution (not owned)
+
     Ibis::Vector<Ibis::real> rhs_;  // the rhs of the system of equations
 
     ConservedQuantities<Ibis::dual> residuals_;  // temporary storage for residuals
@@ -57,65 +60,60 @@ private:
     ConservedQuantities<Ibis::dual> cq_tmp_;  // storage for perturbed cq
 
     // the simulation
-    Sim<Ibis::dual> sim_;
+    std::shared_ptr<Sim<Ibis::dual>> sim_;
 };
 
-// class SteadyState : public Solver {
-// public:
-//     SteadyState(json config, GridBlock<Ibis::dual>& grid, std::string grid_dir,
-//                 std::string flow_dir);
 
-//     ~SteadyState() {}
 
-//     int solve();
+class SteadyState : public Solver {
+public:
+    SteadyState(json config, GridBlock<Ibis::dual>& grid, std::string grid_dir,
+                std::string flow_dir);
 
-// private:
-//     // configuration
-//     unsigned int max_nonlinear_steps_;
-//     unsigned int print_frequency_;
-//     unsigned int plot_frequency_;
-//     unsigned int diagnostics_frequency_;
-//     std::unique_ptr<CflSchedule> cfl_;
+    ~SteadyState() {}
 
-//     // progress
-//     Ibis::real stable_dt_;
-//     Ibis::real dt_star_;
+    int solve();
 
-//     // input/output
-//     FVIO<Ibis::dual> io_;
+private:
+    // The Jfnk solver
+    Jfnk jfnk_;
+    
+    // configuration
+    unsigned int print_frequency_;
+    unsigned int plot_frequency_;
+    unsigned int diagnostics_frequency_;
 
-//     // implementation
-//     int initialise();
-//     int finalise();
-//     int take_step();
-//     bool print_this_step(unsigned int step);
-//     bool plot_this_step(unsigned int step);
-//     int plot_solution(unsigned int step);
-//     void print_progress(unsigned int step, Ibis::real wc);
-//     std::string stop_reason(unsigned int step);
-//     bool stop_now(unsigned int step);
-//     int max_step() const { return max_nonlinear_steps_; }
-//     int count_bad_cells() { return fv_.count_bad_cells(fs_, grid_.num_cells()); }
+    // progress
+    Ibis::real stable_dt_;
+    Ibis::real dt_star_;
 
-// private:
-//     // memory
-//     ConservedQuantities<Ibis::dual> cq_;
-//     ConservedQuantities<Ibis::dual> residuals_;
-//     FlowStates<Ibis::dual> fs_;
+    // input/output
+    FVIO<Ibis::dual> io_;
 
-//     // The RHS vector
-//     Ibis::Vector<Ibis::dual> rhs_;
+    // implementation
+    int initialise();
+    int finalise();
+    int take_step();
+    bool print_this_step(unsigned int step);
+    bool plot_this_step(unsigned int step);
+    int plot_solution(unsigned int step);
+    void print_progress(unsigned int step, Ibis::real wc);
+    std::string stop_reason(unsigned int step);
+    bool stop_now(unsigned int step);
+    int max_step() const { return jfnk_.max_steps(); }
+    int count_bad_cells() { return sim_.fv.count_bad_cells(fs_, sim_.grid.num_cells()); }
 
-//     // spatial discretisation
-//     GridBlock<Ibis::dual> grid_;
-//     FiniteVolume<Ibis::dual> fv_;
+private:
+    // memory
+    ConservedQuantities<Ibis::dual> cq_;
+    ConservedQuantities<Ibis::dual> residuals_;
+    FlowStates<Ibis::dual> fs_;
 
-//     // gas models
-//     IdealGas<Ibis::dual> gas_model_;
-//     TransportProperties<Ibis::dual> trans_prop_;
+    // the core simulation
+    Sim<Ibis::dual> sim_;
 
-//     // linearisation
-//     SteadyStateLinearisation linearisation_;
-// };
+    // linearisation of the system about the current solution
+    SteadyStateLinearisation linearisation_;
+};
 
 #endif

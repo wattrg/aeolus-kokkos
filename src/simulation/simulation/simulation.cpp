@@ -11,5 +11,5 @@ Sim<T>::Sim(GridBlock<T>&& grid_, json config) : grid(grid_) {
     trans_prop = TransportProperties<T>(config.at("transport_properties"));
 }
 
-template class Sim<Ibis::real>;
-template class Sim<Ibis::dual>;
+template struct Sim<Ibis::real>;
+template struct Sim<Ibis::dual>;

@@ -30,7 +30,7 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
         system->matrix_vector_product(v_, w_);
         for (size_t i = 0; i < j; i++) {
             H0_(i, j) = Ibis::dot(w_, v_); // need to think about where H0_ lives
-            Ibis::add_scaled_vector(w_, krylov_vectors_(i), -H0_(i, j));
+            // Ibis::add_scaled_vector(w_, krylov_vectors_(i), -H0_(i, j));
         }
         H0_(j+1, j) = Ibis::norm2(w_);
         Ibis::scale(w_, v_, 1.0 /H0_(j+1, j));

@@ -1,5 +1,5 @@
-#ifndef SOLVER_H
-#define SOLVER_H
+#ifndef SIMULATION_H
+#define SIMULATION_H
 
 #include <finite_volume/finite_volume.h>
 #include <gas/gas_model.h>

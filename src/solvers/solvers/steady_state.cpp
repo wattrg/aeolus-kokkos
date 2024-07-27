@@ -38,10 +38,10 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
         });
 
     // convert the conserved quantities to primatives, ready to evaluate the residuals
-    conserved_to_primatives(cq_tmp_, fs_tmp_, sim_.gas_model);
+    conserved_to_primatives(cq_tmp_, fs_tmp_, sim_->gas_model);
 
     // evaluate the residuals
-    sim_.fv.compute_dudt(fs_tmp_, sim_.grid, residuals, sim_.gas_model, sim_.trans_prop);
+    sim_->fv.compute_dudt(fs_tmp_, sim_->grid, residuals, sim_->gas_model, sim_->trans_prop);
 
     // set the components of vec to the dual component of dudt
     Kokkos::parallel_for(
@@ -56,7 +56,7 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
 }
 
 void SteadyStateLinearisation::eval_rhs() {
-    sim_.fv.compute_dudt(fs_, sim_.grid, residuals_, sim_.gas_model, sim_.trans_prop);
+    sim_->fv.compute_dudt(fs_, sim_->grid, residuals_, sim_->gas_model, sim_->trans_prop);
 
     size_t n_cons = n_cons_;
     auto rhs = rhs_;
