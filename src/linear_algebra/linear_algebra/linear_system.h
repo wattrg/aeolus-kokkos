@@ -4,7 +4,7 @@
 #include <finite_volume/conserved_quantities.h>
 #include <simulation/simulation.h>
 #include <util/numeric_types.h>
-#include <util/types.h>
+#include <linear_algebra/vector.h>
 
 class LinearSystem {
 public:

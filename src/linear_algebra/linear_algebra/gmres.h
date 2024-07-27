@@ -4,7 +4,7 @@
 // #include <linear_algebra/linear_solver.h>
 #include <linear_algebra/linear_system.h>
 #include <util/numeric_types.h>
-#include <util/types.h>
+#include <linear_algebra/vector.h>
 
 #include <Kokkos_Core.hpp>
 #include <nlohmann/json.hpp>
@@ -36,6 +36,8 @@ private:
 public: // this has to be public to access from inside kernels
     // memory
     Ibis::Matrix<Ibis::real> krylov_vectors_;
+    Ibis::Vector<Ibis::real> v_;
+    // Ibis::Vector<Ibis::real> z_;
     Ibis::Vector<Ibis::real> r0_;
     Ibis::Vector<Ibis::real> w_;
 

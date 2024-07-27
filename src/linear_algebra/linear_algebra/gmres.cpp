@@ -1,6 +1,6 @@
 #include <doctest/doctest.h>
 #include <linear_algebra/gmres.h>
-#include <linear_algebra/norm.h>
+#include <linear_algebra/vector.h>
 
 Gmres::Gmres(const std::shared_ptr<LinearSystem> system, const size_t max_iters,
              Ibis::real tol) {
@@ -24,6 +24,17 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
                          Ibis::Vector<Ibis::real>& x0) {
     compute_r0_(system, x0);
     Ibis::real beta = Ibis::norm2(r0_);
+    Ibis::scale(r0_, v_, 1.0 / beta);
+
+    for (size_t j = 0; j < max_iters_; j++) {
+        system->matrix_vector_product(v_, w_);
+        for (size_t i = 0; i < j; i++) {
+            H0_(i, j) = Ibis::dot(w_, v_); // need to think about where H0_ lives
+            Ibis::add_scaled_vector(w_, krylov_vectors_(i), -H0_(i, j));
+        }
+        H0_(j+1, j) = Ibis::norm2(w_);
+        Ibis::scale(w_, v_, 1.0 /H0_(j+1, j));
+    }
 }
 
 void Gmres::compute_r0_(std::shared_ptr<LinearSystem> system,
