@@ -3,8 +3,8 @@
 
 // #include <linear_algebra/linear_solver.h>
 #include <linear_algebra/linear_system.h>
-#include <util/numeric_types.h>
 #include <linear_algebra/vector.h>
+#include <util/numeric_types.h>
 
 #include <Kokkos_Core.hpp>
 #include <nlohmann/json.hpp>
@@ -32,8 +32,7 @@ private:
     size_t tol_;
     size_t num_vars_;
 
-
-public: // this has to be public to access from inside kernels
+public:  // this has to be public to access from inside kernels
     // memory
     Ibis::Matrix<Ibis::real> krylov_vectors_;
     Ibis::Vector<Ibis::real> v_;

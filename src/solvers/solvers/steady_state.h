@@ -1,7 +1,6 @@
 #ifndef STEADY_STATE_SOLVER_H
 #define STEADY_STATE_SOLVER_H
 
-#include <solvers/solver.h>
 #include <finite_volume/conserved_quantities.h>
 #include <gas/flow_state.h>
 #include <io/io.h>
@@ -9,7 +8,7 @@
 #include <simulation/simulation.h>
 #include <solvers/cfl.h>
 #include <solvers/jfnk.h>
-
+#include <solvers/solver.h>
 
 class SteadyStateLinearisation : public LinearSystem {
 public:
@@ -51,7 +50,7 @@ private:
     size_t n_vars_;
     size_t dim_;
     // ConservedQuantitiese<Ibis::dual> cq_;  // the current solution (not owned)
-    FlowStates<Ibis::dual> fs_;     // the current solution (not owned)
+    FlowStates<Ibis::dual> fs_;  // the current solution (not owned)
 
     Ibis::Vector<Ibis::real> rhs_;  // the rhs of the system of equations
 
@@ -62,8 +61,6 @@ private:
     // the simulation
     std::shared_ptr<Sim<Ibis::dual>> sim_;
 };
-
-
 
 class SteadyState : public Solver {
 public:
@@ -77,7 +74,7 @@ public:
 private:
     // The Jfnk solver
     Jfnk jfnk_;
-    
+
     // configuration
     unsigned int print_frequency_;
     unsigned int plot_frequency_;
