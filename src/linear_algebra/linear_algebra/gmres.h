@@ -2,19 +2,19 @@
 #define GMRES_H
 
 // #include <linear_algebra/linear_solver.h>
-#include <linear_algebra/linear_system.h>
 #include <linear_algebra/dense_linear_algebra.h>
+#include <linear_algebra/linear_system.h>
 #include <util/numeric_types.h>
+#include <util/types.h>
 
 #include <Kokkos_Core.hpp>
 #include <nlohmann/json.hpp>
-#include <util/types.h>
 
 using json = nlohmann::json;
 
 struct GmresResult {
     GmresResult(bool success, size_t n_iters, Ibis::real tol, Ibis::real residual);
-    
+
     bool succes;
     size_t n_iters;
     Ibis::real tol;
@@ -28,7 +28,6 @@ public:
     using ArrayLayout = Ibis::DefaultArrayLayout;
     using HostArrayLayout = Ibis::DefaultHostArrayLayout;
 
-    
 public:
     Gmres(const std::shared_ptr<LinearSystem> system, const size_t max_iters,
           Ibis::real tol);

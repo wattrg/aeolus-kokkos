@@ -1,8 +1,9 @@
 #include <doctest/doctest.h>
-#include <linear_algebra/gmres.h>
 #include <linear_algebra/dense_linear_algebra.h>
+#include <linear_algebra/gmres.h>
 
-GmresResult::GmresResult(bool success_, size_t n_iters_, Ibis::real tol_, Ibis::real residual_) 
+GmresResult::GmresResult(bool success_, size_t n_iters_, Ibis::real tol_,
+                         Ibis::real residual_)
     : succes(success_), n_iters(n_iters_), tol(tol_), residual(residual_) {}
 
 Gmres::Gmres(const std::shared_ptr<LinearSystem> system, const size_t max_iters,
@@ -54,10 +55,10 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
 
         // build the rotation matrix for this step
         Omega_.set_to_identity();
-        Ibis::real denom = 
+        Ibis::real denom =
             Ibis::sqrt(H0_(j, j) * H0_(j, j) + H0_(j + 1, j) * H0_(j + 1, j));
         Ibis::real si = H0_(j + 1, j) / denom;
-        Ibis::real ci = H0_(j ,j)  / denom;
+        Ibis::real ci = H0_(j, j) / denom;
         Omega_(j, j) = ci;
         Omega_(j, j + 1) = si;
         Omega_(j + 1, j) = -si;
@@ -71,7 +72,7 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
         auto g_new = g1_.sub_vector(0, j + 2);
         Ibis::gemm(Omega, H, H_new);
         Ibis::gemv(Omega, g, g_new);
-        
+
         // and update the global rotation matrix
         auto Q = Q0_.sub_matrix(0, j + 2, 0, j + 2);
         auto Q_new = Q1_.sub_matrix(0, j + 2, 0, j + 2);
