@@ -1,6 +1,6 @@
 #include <doctest/doctest.h>
 #include <linear_algebra/gmres.h>
-#include <linear_algebra/vector.h>
+#include <linear_algebra/dense_linear_algebra.h>
 
 GmresResult::GmresResult(bool success_, size_t n_iters_, Ibis::real tol_, Ibis::real residual_) 
     : succes(success_), n_iters(n_iters_), tol(tol_), residual(residual_) {}

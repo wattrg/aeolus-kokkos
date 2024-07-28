@@ -2,7 +2,7 @@ add_library(
     linear_algebra
     STATIC
     linear_algebra/gmres.cpp 
-    linear_algebra/vector.cpp
+    linear_algebra/dense_linear_algebra.cpp
 )
 target_link_libraries(
     linear_algebra 

@@ -3,12 +3,12 @@
 
 // #include <linear_algebra/linear_solver.h>
 #include <linear_algebra/linear_system.h>
-#include <linear_algebra/vector.h>
+#include <linear_algebra/dense_linear_algebra.h>
 #include <util/numeric_types.h>
 
 #include <Kokkos_Core.hpp>
 #include <nlohmann/json.hpp>
-#include "util/types.h"
+#include <util/types.h>
 
 using json = nlohmann::json;
 
@@ -52,14 +52,14 @@ public:  // this has to be public to access from inside kernels
     Ibis::Vector<Ibis::real> w_;
 
     // least squares problem
-    Ibis::Matrix<Ibis::real, HostMemSpace, HostArrayLayout> H0_;
-    Ibis::Matrix<Ibis::real, HostMemSpace, HostArrayLayout> H1_;
-    Ibis::Matrix<Ibis::real, HostMemSpace, HostArrayLayout> Q0_;
-    Ibis::Matrix<Ibis::real, HostMemSpace, HostArrayLayout> Q1_;
-    Ibis::Matrix<Ibis::real, HostMemSpace, HostArrayLayout> Omega_;
-    Ibis::Vector<Ibis::real, HostArrayLayout, HostMemSpace> g0_;
-    Ibis::Vector<Ibis::real, HostArrayLayout, HostMemSpace> g1_;
-    Ibis::Vector<Ibis::real, HostArrayLayout, HostMemSpace> h_rotated_;
+    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> H0_;
+    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> H1_;
+    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> Q0_;
+    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> Q1_;
+    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> Omega_;
+    Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace> g0_;
+    Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace> g1_;
+    Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace> h_rotated_;
 
     // implementation
     void compute_r0_(std::shared_ptr<LinearSystem> system, Ibis::Vector<Ibis::real>& x0);

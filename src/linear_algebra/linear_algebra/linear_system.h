@@ -2,7 +2,7 @@
 #define LINEAR_SYSTEM_H
 
 #include <finite_volume/conserved_quantities.h>
-#include <linear_algebra/vector.h>
+#include <linear_algebra/dense_linear_algebra.h>
 #include <simulation/simulation.h>
 #include <util/numeric_types.h>
 

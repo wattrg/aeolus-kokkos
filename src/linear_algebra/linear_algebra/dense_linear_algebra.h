@@ -5,22 +5,26 @@
 #include <util/types.h>
 
 #include <Kokkos_Core.hpp>
+#include "Kokkos_Core_fwd.hpp"
 
 namespace Ibis {
 
 // template <typename T, class Layout = DefaultArrayLayout, class Space = DefaultMemSpace>
 // using Vector = Array1D<T, Layout, Space>;
 
-template <typename T, class Layout = DefaultArrayLayout, class Space = DefaultMemSpace>
+template <typename T,
+          class ExecSpace = DefaultExecSpace,
+          class Layout = typename ExecSpace::array_layout,
+          class MemSpace = typename ExecSpace::memory_space>
 class Vector {
 public:
     Vector() {}
 
     Vector(std::string name, size_t n_values) {
-        data_ = Array1D<T, Layout, Space> (name, n_values);
+        data_ = Array1D<T, Layout, MemSpace> (name, n_values);
     }
 
-    Vector(Array1D<T, Layout, Space> data) : data_(data) {}
+    Vector(Array1D<T, Layout, MemSpace> data) : data_(data) {}
 
     KOKKOS_INLINE_FUNCTION
     T& operator() (const size_t i) { return data_(i); }
@@ -28,8 +32,8 @@ public:
     KOKKOS_INLINE_FUNCTION
     T& operator() (const size_t i) const { return data_(i); }
 
-    Vector<T, Kokkos::LayoutStride, Space> sub_vector(const size_t start, const size_t end) {
-        return Vector<T, Kokkos::LayoutStride, Space>(
+    Vector<T, ExecSpace, Kokkos::LayoutStride, MemSpace> sub_vector(const size_t start, const size_t end) {
+        return Vector<T, ExecSpace, Kokkos::LayoutStride, MemSpace>(
             Kokkos::subview(data_, Kokkos::make_pair(start, end))
         );
     }
@@ -38,20 +42,23 @@ public:
     size_t size() const { return data_.extent(0); }
 
 private:
-    Array1D<T, Layout, Space> data_;
+    Array1D<T, Layout, MemSpace> data_;
 };
 
 
-template <typename T, class Space = DefaultMemSpace, class Layout = DefaultArrayLayout>
+template <typename T,
+          class ExecSpace = DefaultExecSpace,
+          class Layout = typename ExecSpace::array_layout,
+          class MemSpace = typename ExecSpace::memory_space>
 class Matrix {
 public:
     Matrix() {}
     
     Matrix(std::string name, const size_t n, const size_t m) {
-        data_ = Array2D<T, Layout, Space>(name, n, m);
+        data_ = Array2D<T, Layout, MemSpace>(name, n, m);
     }
 
-    Matrix(Array2D<T, Layout, Space> data) : data_(data) {}
+    Matrix(Array2D<T, Layout, MemSpace> data) : data_(data) {}
 
     KOKKOS_INLINE_FUNCTION
     T& operator()(const size_t row, const size_t col) { return data_(row, col); }
@@ -70,11 +77,11 @@ public:
 
     // Return a sub-matrix. The data is the same data, so any modifications
     // to either matrix will be seen in the other matrix
-    Matrix<T, Space, Kokkos::LayoutStride> sub_matrix(const size_t start_row,
+    Matrix<T, ExecSpace, Kokkos::LayoutStride, MemSpace> sub_matrix(const size_t start_row,
                                                       const size_t end_row,
                                                       const size_t start_col,
                                                       const size_t end_col) {
-        return Matrix<T, Space, Kokkos::LayoutStride>(
+        return Matrix<T, ExecSpace, Kokkos::LayoutStride, MemSpace>(
             Kokkos::subview(data_, Kokkos::make_pair(start_row, end_row),
                                    Kokkos::make_pair(start_col, end_col))
         );
@@ -83,21 +90,21 @@ public:
     // The row vector at a given row in the matrix
     // The data is the same, so any changes to the vector or matrix
     // will appear in the other
-    Vector<T, Kokkos::LayoutStride, Space> row(const size_t row) {
-        return Vector<T, Kokkos::LayoutStride, Space>(
+    Vector<T, ExecSpace, Kokkos::LayoutStride, MemSpace> row(const size_t row) {
+        return Vector<T, ExecSpace, Kokkos::LayoutStride, MemSpace>(
             Kokkos::subview(data_, row, Kokkos::ALL));
     }
 
     // The column vector at a given column in the matrix
     // The data is the same, so any changes to the vector or matrix
     // will appear in the other
-    Vector<T, Kokkos::LayoutStride, Space> column(const size_t col) {
-        return Vector<T, Kokkos::LayoutStride, Space>(
+    Vector<T, ExecSpace, Kokkos::LayoutStride, MemSpace> column(const size_t col) {
+        return Vector<T, ExecSpace, Kokkos::LayoutStride, MemSpace>(
             Kokkos::subview(data_, Kokkos::ALL, col));
     }
 
     template <typename OtherLayout>
-    void deep_copy(Matrix<T, Space, OtherLayout>& other) {
+    void deep_copy(Matrix<T, ExecSpace, OtherLayout, MemSpace>& other) {
         assert(this->n_rows() == other.n_rows());
         assert(this->n_cols() == other.n_rows());
 
@@ -119,69 +126,81 @@ public:
     size_t n_cols() const { return data_.extent(1); }
 
 private:
-    Array2D<T, Layout, Space> data_;
+    Array2D<T, Layout, MemSpace> data_;
 };
 
-// template <typename T, class Layout = DefaultArrayLayout, class Space = DefaultMemSpace>
-// using Matrix = Array2D<T, Layout, Space>;
 
-template <typename T>
-auto& row(Matrix<T>& matrix, const size_t row_idx);
+template <typename T, class ExecSpace, class Layout, class MemSpace>
+T norm2(const Vector<T, ExecSpace, Layout, MemSpace>& vec) {
+    return Ibis::sqrt(norm2_squared(vec));
+}
 
-template <typename T>
-T norm2(const Vector<T>& vec);
+template <typename T, class ExecSpace, class Layout, class MemSpace>
+T norm2_squared(const Vector<T, ExecSpace, Layout, MemSpace>& vec)  {
+    T norm2;
+    Kokkos::parallel_reduce(
+        "Vector::norm2",
+        Kokkos::RangePolicy<ExecSpace>(0, vec.size()),
+        KOKKOS_LAMBDA(const size_t i, T& utd) {
+            T value = vec(i);
+            utd += value * value;
+        },
+        Kokkos::Sum<T>(norm2));
+    return norm2;
+}
 
-template <typename T>
-T norm2_squared(const Vector<T>& vec);
-
-template <typename T, class Space, class Layout>
-void scale_in_place(Vector<T, Layout, Space>& vec, const T factor){
+template <typename T, class ExecSpace, class Layout, class MemSpace>
+void scale_in_place(Vector<T, ExecSpace, Layout, MemSpace>& vec, const T factor){
     Kokkos::parallel_for(
-        "Ibis::Vector::scale_in_place", vec.size(),
+        "Ibis::Vector::scale_in_place", Kokkos::RangePolicy<ExecSpace>(0, vec.size()),
         KOKKOS_LAMBDA(const size_t i) { vec(i) *= factor; });
 }
 
-template <typename T, class Space, class Layout1, class Layout2>
-void scale(const Vector<T, Layout1, Space>& vec, Vector<T, Layout2, Space>& result, const T factor) {
+template <typename T, class ExecSpace, class Layout1, class Layout2, class MemSpace>
+void scale(const Vector<T, ExecSpace, Layout1, MemSpace>& vec,
+                 Vector<T, ExecSpace, Layout2, MemSpace>& result, const T factor) {
     assert(vec.size() == result.size());
     Kokkos::parallel_for(
-        "Ibis::Vector::scale", vec.size(),
+        "Ibis::Vector::scale", Kokkos::RangePolicy<ExecSpace>(0, vec.size()),
         KOKKOS_LAMBDA(const size_t i) { result(i) = vec(i) * factor; });
 }
 
-template <typename T, class Space, class Layout1, class Layout2>
-void add_scaled_vector(Vector<T, Layout1, Space>& vec1,
-                       const Vector<T, Layout2, Space>& vec2, T scale) {
+template <typename T, class ExecSpace, class Layout1, class Layout2, class MemSpace>
+void add_scaled_vector(Vector<T, ExecSpace, Layout1, MemSpace>& vec1,
+                       const Vector<T, ExecSpace, Layout2, MemSpace>& vec2, T scale) {
     assert(vec1.size() == vec2.size());
     Kokkos::parallel_for(
-        "Ibis::Vector::subtract_scated_vector", vec1.size(),
+        "Ibis::Vector::subtract_scated_vector",
+        Kokkos::RangePolicy<ExecSpace>(0, vec1.size()),
         KOKKOS_LAMBDA(const size_t i) { vec1(i) += vec2(i) * scale; });
 }
 
-template <typename T, class Space, class Layout1, class Layout2>
-void deep_copy_vector(Vector<T, Layout1, Space> dest, const Vector<T, Layout2, Space>& src) {
+template <typename T, class ExecSpace, class Layout1, class Layout2, class MemSpace>
+void deep_copy_vector(Vector<T, ExecSpace, Layout1, MemSpace> dest,
+                      const Vector<T, ExecSpace, Layout2, MemSpace>& src) {
     assert(dest.size() == src.size());
     // For the moment we'll make this general. If Layout1 and Layout2 are different
     // we cannot use Kokkos::deep_copy. This is the intended use of this function.
     // We could detect if Layout1 and Layout2 are the same, but meh...
-    Kokkos::parallel_for("Ibis::deep_copy_vector", dest.size(),
+    Kokkos::parallel_for("Ibis::deep_copy_vector",
+                         Kokkos::RangePolicy<ExecSpace>(0, dest.size()),
                          KOKKOS_LAMBDA(const size_t i) {
             dest(i) = src(i);            
         }
     );
 }
 
-template <typename T, class Space, class MatrixLayout, class VecLayout, class ResLayout>
-void gemv(const Matrix<T, Space, MatrixLayout>& matrix,
-          const Vector<T, VecLayout, Space>& vec,
-          Vector<T, ResLayout, Space>& res) {
+template <typename T, class ExecSpace, class MatrixLayout, class VecLayout, class ResLayout, class MemSpace>
+void gemv(const Matrix<T, ExecSpace, MatrixLayout, MemSpace>& matrix,
+          const Vector<T, ExecSpace, VecLayout, MemSpace>& vec,
+          Vector<T, ExecSpace, ResLayout, MemSpace>& res) {
     size_t n_rows = matrix.n_rows();
     size_t n_cols = matrix.n_cols();
 
     assert(vec.size() == n_cols);
     assert(res.size() == n_cols);
 
-    Kokkos::parallel_for("Ibis::gemv", n_rows, KOKKOS_LAMBDA(const size_t row_i){
+    Kokkos::parallel_for("Ibis::gemv", Kokkos::RangePolicy<ExecSpace>(0, n_rows), KOKKOS_LAMBDA(const size_t row_i){
         T dot = T(0.0);
         for (size_t col_i = 0; col_i < n_cols; col_i++) {
             dot += matrix(row_i, col_i) * vec(col_i);                           
@@ -190,15 +209,16 @@ void gemv(const Matrix<T, Space, MatrixLayout>& matrix,
     });
 }
 
-template <typename T, class Space, class LhsLayout, class RhsLayout, class ResLayout>
-void gemm(const Matrix<T, Space, LhsLayout> lhs, const Matrix<T, Space, RhsLayout> rhs,
-          Matrix<T, Space, ResLayout> res) {
+template <typename T, class ExecSpace, class LhsLayout, class RhsLayout, class ResLayout, class MemSpace>
+void gemm(const Matrix<T, ExecSpace, LhsLayout, MemSpace> lhs,
+          const Matrix<T, ExecSpace, RhsLayout, MemSpace> rhs,
+          Matrix<T, ExecSpace, ResLayout, MemSpace> res) {
     assert(lhs.n_cols() == rhs.n_rows());
     assert(lhs.n_rows() == res.n_rows());
     assert(rhs.n_cols() == res.n_cols());
 
     // this is probably not a good implementation...
-    Kokkos::parallel_for("Ibis::gemm", lhs.n_rows(), KOKKOS_LAMBDA(const size_t row){
+    Kokkos::parallel_for("Ibis::gemm", Kokkos::RangePolicy<ExecSpace>(0, lhs.n_rows()), KOKKOS_LAMBDA(const size_t row){
         for (size_t col = 0; col < rhs.n_cols(); col++) {
             T dot = T(0.0);
             for (size_t i = 0; i < lhs.n_cols(); i++) {
@@ -209,8 +229,16 @@ void gemm(const Matrix<T, Space, LhsLayout> lhs, const Matrix<T, Space, RhsLayou
     });
 }
 
-template <typename T>
-T dot(const Vector<T>& vec1, const Vector<T>& vec2);
+template <typename T, class ExecSpace, class Layout, class MemSpace>
+T dot(const Vector<T, ExecSpace, Layout, MemSpace>& vec1, const Vector<T, ExecSpace, Layout, MemSpace>& vec2) {
+    assert(vec1.size() == vec2.size());
+    T dot_product;
+    Kokkos::parallel_reduce(
+        "Ibis::Vector::dot", Kokkos::RangePolicy<ExecSpace>(0, vec1.size()),
+        KOKKOS_LAMBDA(const size_t i, T& utd) { utd += vec1(i) * vec2(i); },
+        Kokkos::Sum<T>(dot_product));
+    return dot_product;
+}
 
 }  // namespace Ibis
 
