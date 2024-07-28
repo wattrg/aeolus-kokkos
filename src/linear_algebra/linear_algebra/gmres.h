@@ -8,16 +8,27 @@
 
 #include <Kokkos_Core.hpp>
 #include <nlohmann/json.hpp>
+#include "util/types.h"
 
 using json = nlohmann::json;
 
 struct GmresResult {
+    GmresResult(bool success, size_t n_iters, Ibis::real tol, Ibis::real residual);
+    
     bool succes;
     size_t n_iters;
     Ibis::real tol;
+    Ibis::real residual;
 };
 
 class Gmres {
+public:
+    using MemSpace = Ibis::DefaultMemSpace;
+    using HostMemSpace = Ibis::DefaultHostMemSpace;
+    using ArrayLayout = Ibis::DefaultArrayLayout;
+    using HostArrayLayout = Ibis::DefaultHostArrayLayout;
+
+    
 public:
     Gmres(const std::shared_ptr<LinearSystem> system, const size_t max_iters,
           Ibis::real tol);
@@ -41,11 +52,14 @@ public:  // this has to be public to access from inside kernels
     Ibis::Vector<Ibis::real> w_;
 
     // least squares problem
-    Ibis::Matrix<Ibis::real> H0_;
-    Ibis::Matrix<Ibis::real> H1_;
-    Ibis::Matrix<Ibis::real> Q0_;
-    Ibis::Matrix<Ibis::real> Q1_;
-    Ibis::Matrix<Ibis::real> Gamma_;
+    Ibis::Matrix<Ibis::real, HostMemSpace, HostArrayLayout> H0_;
+    Ibis::Matrix<Ibis::real, HostMemSpace, HostArrayLayout> H1_;
+    Ibis::Matrix<Ibis::real, HostMemSpace, HostArrayLayout> Q0_;
+    Ibis::Matrix<Ibis::real, HostMemSpace, HostArrayLayout> Q1_;
+    Ibis::Matrix<Ibis::real, HostMemSpace, HostArrayLayout> Omega_;
+    Ibis::Vector<Ibis::real, HostArrayLayout, HostMemSpace> g0_;
+    Ibis::Vector<Ibis::real, HostArrayLayout, HostMemSpace> g1_;
+    Ibis::Vector<Ibis::real, HostArrayLayout, HostMemSpace> h_rotated_;
 
     // implementation
     void compute_r0_(std::shared_ptr<LinearSystem> system, Ibis::Vector<Ibis::real>& x0);
