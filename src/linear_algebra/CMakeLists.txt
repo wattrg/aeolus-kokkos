@@ -12,6 +12,7 @@ target_link_libraries(
     simulation
     util 
     finite_volume 
+    doctest
 )
 target_include_directories(linear_algebra PUBLIC .)
 
@@ -20,6 +21,7 @@ if (Ibis_BUILD_TESTS)
     add_executable(
         linear_algebra_unittest 
         test/unittest.cpp
+        linear_algebra/dense_linear_algebra.cpp
     )
 
     target_link_libraries(
@@ -27,6 +29,7 @@ if (Ibis_BUILD_TESTS)
 	      PRIVATE
 	      Kokkos::kokkos
 	      doctest
+	      util
     )
 
     target_include_directories(linear_algebra_unittest PRIVATE .)

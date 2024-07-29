@@ -1,8 +1,6 @@
 #include <doctest/doctest.h>
 #include <grid/geom.h>
 
-const Ibis::real EPS = 1e-15;
-
 TEST_CASE("distance_between_points") {
     // allocate positions
     Vector3s<Ibis::real> pos{"pos", 10};
@@ -14,7 +12,7 @@ TEST_CASE("distance_between_points") {
     }
     pos.deep_copy(pos_host);
 
-    // allocate the indecies we're going to query
+    // allocate the indicies we're going to query
     Field<int> i("i", 5);
     auto i_host = i.host_mirror();
     Field<int> j("j", 5);
@@ -44,5 +42,5 @@ TEST_CASE("distance_between_points") {
     results_host.deep_copy(results);
 
     // check results
-    CHECK(Kokkos::abs(results_host(0) - Ibis::sqrt(19)) < EPS);
+    CHECK(results_host(0) == doctest::Approx(Ibis::sqrt(19.0)));
 }

@@ -1,12 +1,10 @@
-#ifndef LA_VECTOR_H
-#define LA_VECTOR_H
+#ifndef DENSE_LINEAR_ALGEBRA_H
+#define DENSE_LINEAR_ALGEBRA_H
 
 #include <util/numeric_types.h>
 #include <util/types.h>
 
 #include <Kokkos_Core.hpp>
-
-#include "Kokkos_Core_fwd.hpp"
 
 namespace Ibis {
 
