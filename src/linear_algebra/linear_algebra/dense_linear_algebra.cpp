@@ -65,7 +65,7 @@ TEST_CASE("Ibis::deep_copy_vector") {
     auto x = large_test_vector();
     auto y = small_test_vector();
     auto x_sub = x.sub_vector(0, 4);
-    Ibis::deep_copy_vector(x_sub, y);
+    x_sub.deep_copy_layout(y);
     CHECK(x(0) == 1.0);
     CHECK(x(1) == 2.0);
     CHECK(x(2) == -3.0);

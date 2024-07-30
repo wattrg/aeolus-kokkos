@@ -58,6 +58,8 @@ public:  // this has to be public to access from inside kernels
     Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> Omega_;
     Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace> g0_;
     Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace> g1_;
+    Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace> ym_host_;
+    Ibis::Vector<Ibis::real> ym_;
     Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace> h_rotated_;
 
     // implementation

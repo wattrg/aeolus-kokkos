@@ -36,6 +36,26 @@ public:
             Kokkos::subview(data_, Kokkos::make_pair(start, end)));
     }
 
+    // this deep_copy overload copies a vector from one memory space to another
+    // as long as they have the same array layout
+    template <class OtherExecSpace, class OtherMemSpace>
+    void deep_copy_space(Vector<T, OtherExecSpace, Layout, OtherMemSpace>& other) {
+        Kokkos::deep_copy(data_, other.data_);
+    }
+
+    // this deep_copy overload copies a vector from one layout to another layout
+    // as long as they are in the same memory space
+    template <class OtherLayout>
+    void deep_copy_layout(Vector<T, ExecSpace, OtherLayout, MemSpace>& other) {
+        assert(size() == other.size());
+        // For the moment we'll make this general. If Layout1 and Layout2 are different
+        // we cannot use Kokkos::deep_copy. This is the intended use of this function.
+        // We could detect if Layout1 and Layout2 are the same, but meh...
+        Kokkos::parallel_for(
+            "Ibis::deep_copy_vector", Kokkos::RangePolicy<ExecSpace>(0, other.size()),
+            KOKKOS_LAMBDA(const size_t i) { data_(i) = other(i); });
+    }
+
     KOKKOS_INLINE_FUNCTION
     size_t size() const { return data_.extent(0); }
 
@@ -175,17 +195,10 @@ void add_scaled_vector(Vector<T, ExecSpace, Layout1, MemSpace>& vec1,
         KOKKOS_LAMBDA(const size_t i) { vec1(i) += vec2(i) * scale; });
 }
 
-template <typename T, class ExecSpace, class Layout1, class Layout2, class MemSpace>
-void deep_copy_vector(Vector<T, ExecSpace, Layout1, MemSpace> dest,
-                      const Vector<T, ExecSpace, Layout2, MemSpace>& src) {
-    assert(dest.size() == src.size());
-    // For the moment we'll make this general. If Layout1 and Layout2 are different
-    // we cannot use Kokkos::deep_copy. This is the intended use of this function.
-    // We could detect if Layout1 and Layout2 are the same, but meh...
-    Kokkos::parallel_for(
-        "Ibis::deep_copy_vector", Kokkos::RangePolicy<ExecSpace>(0, dest.size()),
-        KOKKOS_LAMBDA(const size_t i) { dest(i) = src(i); });
-}
+// template <typename T, class ExecSpace, class Layout1, class Layout2, class MemSpace>
+// void deep_copy_vector(Vector<T, ExecSpace, Layout1, MemSpace> dest,
+//                       const Vector<T, ExecSpace, Layout2, MemSpace>& src) {
+// }
 
 template <typename T, class ExecSpace, class MatrixLayout, class VecLayout,
           class ResLayout, class MemSpace>
