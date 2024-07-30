@@ -224,6 +224,13 @@ void gemm(const Matrix<T, ExecSpace, LhsLayout, MemSpace> lhs,
         });
 }
 
+template <typename T, class ExecSpace, class MatrixLayout, class SolLayout, class RhsLayout, class MemSpace>
+void upper_triangular_solve(Matrix<T, ExecSpace, MatrixLayout, MemSpace> A,
+                            Vector<T, ExecSpace, SolLayout, MemSpace> sol,
+                            Vector<T, ExecSpace, RhsLayout, MemSpace> rhs) {
+    
+}
+
 template <typename T, class ExecSpace, class Layout, class MemSpace>
 T dot(const Vector<T, ExecSpace, Layout, MemSpace>& vec1,
       const Vector<T, ExecSpace, Layout, MemSpace>& vec2) {

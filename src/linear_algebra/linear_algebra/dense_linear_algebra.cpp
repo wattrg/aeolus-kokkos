@@ -132,7 +132,7 @@ TEST_CASE("Ibis::dot") {
 }
 
 TEST_CASE("Ibis::Matrix::column") {
-    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> A("lhs", 3, 5);
+    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> A("A", 3, 5);
     A(0, 0) = 1.0; A(0, 1) = 2.0; A(0, 2) = 3.0; A(0, 3) = 4.0; A(0, 4) = 5.0;
     A(1, 0) = 6.0; A(1, 1) = 7.0; A(1, 2) = 8.0; A(1, 3) = 9.0; A(1, 4) = 10.0;
     A(2, 0) = 11.0; A(2, 1) = 12.0; A(2, 2) = 13.0; A(2, 3) = 14.0; A(2, 4) = 15.0;
@@ -145,7 +145,7 @@ TEST_CASE("Ibis::Matrix::column") {
 }
 
 TEST_CASE("Ibis::Matrix::column") {
-    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> A("lhs", 3, 5);
+    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> A("A", 3, 5);
     A(0, 0) = 1.0; A(0, 1) = 2.0; A(0, 2) = 3.0; A(0, 3) = 4.0; A(0, 4) = 5.0;
     A(1, 0) = 6.0; A(1, 1) = 7.0; A(1, 2) = 8.0; A(1, 3) = 9.0; A(1, 4) = 10.0;
     A(2, 0) = 11.0; A(2, 1) = 12.0; A(2, 2) = 13.0; A(2, 3) = 14.0; A(2, 4) = 15.0;
@@ -160,7 +160,7 @@ TEST_CASE("Ibis::Matrix::column") {
 }
 
 TEST_CASE("Ibis::Matrix::sub_matrix") {
-    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> A("lhs", 3, 5);
+    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> A("A", 3, 5);
     A(0, 0) = 1.0; A(0, 1) = 2.0; A(0, 2) = 3.0; A(0, 3) = 4.0; A(0, 4) = 5.0;
     A(1, 0) = 6.0; A(1, 1) = 7.0; A(1, 2) = 8.0; A(1, 3) = 9.0; A(1, 4) = 10.0;
     A(2, 0) = 11.0; A(2, 1) = 12.0; A(2, 2) = 13.0; A(2, 3) = 14.0; A(2, 4) = 15.0;
@@ -169,4 +169,19 @@ TEST_CASE("Ibis::Matrix::sub_matrix") {
 
     CHECK(A_sub(0, 0) == 2.0); CHECK(A_sub(0, 1) == 3.0);
     CHECK(A_sub(1, 0) == 7.0); CHECK(A_sub(1, 1) == 8.0);
+}
+
+TEST_CASE("Ibis::Matrix::deep_copy") {
+    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> A("A", 3, 3);
+    A.set_to_identity();
+    auto A_sub = A.sub_matrix(0, 2, 0, 2);
+
+    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> B("B", 2, 2);
+    B(0, 0) = 2.0;
+    B(1, 1) = 3.0;
+    A_sub.deep_copy(B);
+
+    CHECK(A(0, 0) == 2.0); CHECK(A(0, 1) == 0.0); CHECK(A(0, 2) == 0.0);
+    CHECK(A(1, 0) == 0.0); CHECK(A(1, 1) == 3.0); CHECK(A(1, 2) == 0.0);
+    CHECK(A(2, 0) == 0.0); CHECK(A(2, 1) == 0.0); CHECK(A(2, 2) == 1.0);
 }

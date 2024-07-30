@@ -4,7 +4,7 @@
 
 GmresResult::GmresResult(bool success_, size_t n_iters_, Ibis::real tol_,
                          Ibis::real residual_)
-    : succes(success_), n_iters(n_iters_), tol(tol_), residual(residual_) {}
+    : success(success_), n_iters(n_iters_), tol(tol_), residual(residual_) {}
 
 Gmres::Gmres(const std::shared_ptr<LinearSystem> system, const size_t max_iters,
              Ibis::real tol) {
@@ -32,6 +32,7 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
     Ibis::scale(r0_, v_, 1.0 / beta);
     Ibis::deep_copy_vector(krylov_vectors_.column(0), v_);
 
+    GmresResult result {false, 0, tol_, beta};
     for (size_t j = 0; j < max_iters_; j++) {
         // build the next krylov vector and entries in the Hessenberg matrix
         system->matrix_vector_product(v_, w_);
@@ -43,6 +44,29 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
         Ibis::scale(w_, v_, 1.0 / H0_(j + 1, j));
         Ibis::deep_copy_vector(krylov_vectors_.column(j + 1), v_);
 
+        // progressively rotate the Hessenberg into upper-triangular form
+        // so we can calculate the residual of this step, and later solve
+        // the least squares problem
+        apply_rotations_to_hessenberg_(j);
+
+        // check convergence
+        Ibis::real residual = Ibis::abs(g0_(j + 1));
+        result.residual = residual;
+        result.n_iters = j;
+        if (residual < tol_) {
+            result.success = true;
+            break;
+        }
+        
+    }
+
+    // return the guess, even if we didn't converge
+    
+
+    return result;
+}
+
+void Gmres::apply_rotations_to_hessenberg_(size_t j) {
         // progressively rotate the Hessenberg into the QR factorisation using
         // plane rotations, on the cpu
         if (j != 0) {
@@ -76,14 +100,16 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
         // and update the global rotation matrix
         auto Q = Q0_.sub_matrix(0, j + 2, 0, j + 2);
         auto Q_new = Q1_.sub_matrix(0, j + 2, 0, j + 2);
-        Ibis::gemm(Omega, Q, Q_new);
+        if (j == 0) {
+            Q_new.deep_copy(Omega);
+        }
+        else {
+            Ibis::gemm(Omega, Q, Q_new);
+        }
 
         Ibis::deep_copy_vector(g, g_new);
         Q.deep_copy(Q_new);
         H.deep_copy(H_new);
-    }
-
-    return GmresResult(true, max_iters_, -1.0, -1.0);
 }
 
 void Gmres::compute_r0_(std::shared_ptr<LinearSystem> system,

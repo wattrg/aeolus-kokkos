@@ -15,7 +15,7 @@ using json = nlohmann::json;
 struct GmresResult {
     GmresResult(bool success, size_t n_iters, Ibis::real tol, Ibis::real residual);
 
-    bool succes;
+    bool success;
     size_t n_iters;
     Ibis::real tol;
     Ibis::real residual;
@@ -39,8 +39,8 @@ public:
 private:
     // configuration
     size_t max_iters_;
-    size_t tol_;
     size_t num_vars_;
+    Ibis::real tol_;
 
 public:  // this has to be public to access from inside kernels
     // memory
@@ -62,6 +62,7 @@ public:  // this has to be public to access from inside kernels
 
     // implementation
     void compute_r0_(std::shared_ptr<LinearSystem> system, Ibis::Vector<Ibis::real>& x0);
+    void apply_rotations_to_hessenberg_(size_t j);
 };
 
 #endif
