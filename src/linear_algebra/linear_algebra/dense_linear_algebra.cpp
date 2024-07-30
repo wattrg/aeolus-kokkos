@@ -85,7 +85,7 @@ TEST_CASE("Ibis::gemm") {
     rhs(3, 0) = 7.0; rhs(3, 1) = 8.0;
     rhs(4, 0) = 9.0; rhs(4, 1) = 10.0;
 
-    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> res("res", 4, 2);
+    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> res("res", 3, 2);
 
     Ibis::gemm(lhs, rhs, res);
 
@@ -184,4 +184,34 @@ TEST_CASE("Ibis::Matrix::deep_copy") {
     CHECK(A(0, 0) == 2.0); CHECK(A(0, 1) == 0.0); CHECK(A(0, 2) == 0.0);
     CHECK(A(1, 0) == 0.0); CHECK(A(1, 1) == 3.0); CHECK(A(1, 2) == 0.0);
     CHECK(A(2, 0) == 0.0); CHECK(A(2, 1) == 0.0); CHECK(A(2, 2) == 1.0);
+}
+
+TEST_CASE("Ibis::upper_triangular_solve") {
+    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> A("A", 3, 3);
+    A(0, 0) = 1.0; A(0, 1) = 2.0; A(0, 2) = 3.0;
+                   A(1, 1) = 5.0; A(1, 2) = 2.0;
+                                  A(2, 2) = 3.0;
+
+    Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace> rhs("rhs", 3);
+    rhs(0) = 1.0; rhs(1) = 2.0; rhs(2) = 3.0;
+    
+    Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace> sol("sol", 3);
+
+    Ibis::upper_triangular_solve(A, sol, rhs);
+
+    CHECK(sol(0) == -2.0);
+    CHECK(sol(1) == 0.0);
+    CHECK(sol(2) == 1.0);
+}
+
+TEST_CASE("Ibis::Matrix::columns") {
+    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> lhs("lhs", 3, 5);
+    lhs(0, 0) = 1.0; lhs(0, 1) = 2.0; lhs(0, 2) = 3.0; lhs(0, 3) = 4.0; lhs(0, 4) = 5.0;
+    lhs(1, 0) = 6.0; lhs(1, 1) = 7.0; lhs(1, 2) = 8.0; lhs(1, 3) = 9.0; lhs(1, 4) = 10.0;
+    lhs(2, 0) = 11.0; lhs(2, 1) = 12.0; lhs(2, 2) = 13.0; lhs(2, 3) = 14.0; lhs(2, 4) = 15.0;
+
+    auto columns = lhs.columns(0, 2);
+    CHECK(columns.n_rows() == 3);
+    CHECK(columns.n_cols() == 2);
+    CHECK(columns(0, 0) == 1.0);
 }

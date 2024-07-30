@@ -22,6 +22,7 @@ if (Ibis_BUILD_TESTS)
         linear_algebra_unittest 
         test/unittest.cpp
         linear_algebra/dense_linear_algebra.cpp
+        linear_algebra/gmres.cpp
     )
 
     target_link_libraries(
@@ -30,6 +31,7 @@ if (Ibis_BUILD_TESTS)
 	      Kokkos::kokkos
 	      doctest
 	      util
+	      simulation
     )
 
     target_include_directories(linear_algebra_unittest PRIVATE .)

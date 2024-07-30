@@ -81,6 +81,14 @@ public:
                             Kokkos::make_pair(start_col, end_col)));
     }
 
+    // Return a sub-matrix containing the columns i->j
+    Matrix<T, ExecSpace, Kokkos::LayoutStride, MemSpace> columns(const size_t start_col,
+                                                                 const size_t end_col) {
+        return Matrix<T, ExecSpace, Kokkos::LayoutStride, MemSpace>(
+            Kokkos::subview(data_, Kokkos::ALL, Kokkos::make_pair(start_col, end_col))
+        );
+    }
+
     // The row vector at a given row in the matrix
     // The data is the same, so any changes to the vector or matrix
     // will appear in the other
@@ -188,7 +196,7 @@ void gemv(const Matrix<T, ExecSpace, MatrixLayout, MemSpace>& matrix,
     size_t n_cols = matrix.n_cols();
 
     assert(vec.size() == n_cols);
-    assert(res.size() == n_cols);
+    assert(res.size() == n_rows);
 
     Kokkos::parallel_for(
         "Ibis::gemv", Kokkos::RangePolicy<ExecSpace>(0, n_rows),
@@ -225,10 +233,21 @@ void gemm(const Matrix<T, ExecSpace, LhsLayout, MemSpace> lhs,
 }
 
 template <typename T, class ExecSpace, class MatrixLayout, class SolLayout, class RhsLayout, class MemSpace>
-void upper_triangular_solve(Matrix<T, ExecSpace, MatrixLayout, MemSpace> A,
+void upper_triangular_solve(const Matrix<T, ExecSpace, MatrixLayout, MemSpace> A,
                             Vector<T, ExecSpace, SolLayout, MemSpace> sol,
                             Vector<T, ExecSpace, RhsLayout, MemSpace> rhs) {
-    
+     assert(A.n_rows() == A.n_cols());   
+     assert(A.n_rows() == sol.size());
+     assert(A.n_rows() == rhs.size());
+
+     int n = A.n_rows();
+     
+     sol(n - 1) = rhs(n - 1) / A(n - 1, n - 1);
+     for (int i = n - 2; i >= 0; i--) {
+         T sum = rhs(i);
+         for (int j = i + 1; j < n; j++) { sum -= A(i, j) * sol(j); }
+         sol(i) = sum / A(i, i);
+     }
 }
 
 template <typename T, class ExecSpace, class Layout, class MemSpace>
