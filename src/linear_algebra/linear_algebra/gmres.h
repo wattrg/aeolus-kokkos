@@ -27,6 +27,7 @@ public:
     using HostMemSpace = Ibis::DefaultHostMemSpace;
     using ArrayLayout = Ibis::DefaultArrayLayout;
     using HostArrayLayout = Ibis::DefaultHostArrayLayout;
+    using HostExecSpace = Ibis::DefaultHostExecSpace;
 
 public:
     Gmres(const std::shared_ptr<LinearSystem> system, const size_t max_iters,
@@ -51,16 +52,16 @@ public:  // this has to be public to access from inside kernels
     Ibis::Vector<Ibis::real> w_;
 
     // least squares problem
-    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> H0_;
-    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> H1_;
-    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> Q0_;
-    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> Q1_;
-    Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace> Omega_;
-    Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace> g0_;
-    Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace> g1_;
-    Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace> ym_host_;
+    Ibis::Matrix<Ibis::real, HostExecSpace> H0_;
+    Ibis::Matrix<Ibis::real, HostExecSpace> H1_;
+    Ibis::Matrix<Ibis::real, HostExecSpace> Q0_;
+    Ibis::Matrix<Ibis::real, HostExecSpace> Q1_;
+    Ibis::Matrix<Ibis::real, HostExecSpace> Omega_;
+    Ibis::Vector<Ibis::real, HostExecSpace> g0_;
+    Ibis::Vector<Ibis::real, HostExecSpace> g1_;
+    Ibis::Vector<Ibis::real, HostExecSpace> ym_host_;
     Ibis::Vector<Ibis::real> ym_;
-    Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace> h_rotated_;
+    Ibis::Vector<Ibis::real, HostExecSpace> h_rotated_;
 
     // implementation
     void compute_r0_(std::shared_ptr<LinearSystem> system, Ibis::Vector<Ibis::real>& x0);

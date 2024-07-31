@@ -14,24 +14,22 @@ Gmres::Gmres(const std::shared_ptr<LinearSystem> system, const size_t max_iters,
     num_vars_ = system->num_vars();
 
     // least squares problem
-    H0_ = Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace>(
-        "Gmres::H0", max_iters_ + 1, max_iters_);
-    H1_ = Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace>(
-        "Gmres::H1", max_iters_ + 1, max_iters_);
-    Q0_ = Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace>(
-        "Gmres::Q0", max_iters_ + 1, max_iters_);
-    Q1_ = Ibis::Matrix<Ibis::real, Kokkos::DefaultHostExecutionSpace>(
-        "Gmres::Q1", max_iters_ + 1, max_iters_);
-    g0_ = Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace>("Gmres::g0",
-                                                                      max_iters_ + 1);
-    g1_ = Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace>("Gmres::g1",
-                                                                      max_iters_ + 1);
-    h_rotated_ = Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace>(
-        "Gmres::h_rotated", max_iters_ + 1);
-    Omega_ = Ibis::Matrix<Ibis::real>("Gmres::Gamma", max_iters_ + 1, max_iters_ + 1);
-    ym_host_ = Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace>(
-        "Gmres::ym_h", max_iters_ + 1);
-    ym_host_ = Ibis::Vector<Ibis::real>("Gmres::ym_d", max_iters_ + 1);
+    H0_ =
+        Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::H0", max_iters_ + 1, max_iters_);
+    H1_ =
+        Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::H1", max_iters_ + 1, max_iters_);
+    Q0_ =
+        Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::Q0", max_iters_ + 1, max_iters_);
+    Q1_ =
+        Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::Q1", max_iters_ + 1, max_iters_);
+    g0_ = Ibis::Vector<Ibis::real, HostExecSpace>("Gmres::g0", max_iters_ + 1);
+    g1_ = Ibis::Vector<Ibis::real, HostExecSpace>("Gmres::g1", max_iters_ + 1);
+    h_rotated_ =
+        Ibis::Vector<Ibis::real, HostExecSpace>("Gmres::h_rotated", max_iters_ + 1);
+    Omega_ = Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::Gamma", max_iters_ + 1,
+                                                     max_iters_ + 1);
+    ym_host_ = Ibis::Vector<Ibis::real, HostExecSpace>("Gmres::ym_h", max_iters_ + 1);
+    ym_ = Ibis::Vector<Ibis::real>("Gmres::ym_d", max_iters_ + 1);
 
     // Krylov subspace and memory for Arnoldi procedure
     krylov_vectors_ =
@@ -90,7 +88,7 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
     // return the guess, even if we didn't converge
     Ibis::upper_triangular_solve(H, ym_host, g);
     ym.deep_copy_space(ym_host);
-    Ibis::gemv(V, g, w);
+    Ibis::gemv(V, ym, w);
     Ibis::add_scaled_vector(x0, w_, 1.0);
 
     return result;
@@ -155,7 +153,7 @@ void Gmres::compute_r0_(std::shared_ptr<LinearSystem> system,
 TEST_CASE("GMRES") {
     class TestLinearSystem : public LinearSystem {
     public:
-        using ExecSpace = Kokkos::DefaultHostExecutionSpace;
+        using ExecSpace = Kokkos::DefaultExecutionSpace;
 
         TestLinearSystem() {
             matrix_ = Ibis::Matrix<Ibis::real, ExecSpace>("A", 5, 5);
@@ -174,11 +172,11 @@ TEST_CASE("GMRES") {
             matrix_(4, 4) = 1.0;
 
             rhs_ = Ibis::Vector<Ibis::real, ExecSpace>("rhs", 5);
-            rhs_(0) = 3.0;
-            rhs_(1) = 2.0;
-            rhs_(2) = 1.5;
-            rhs_(3) = 5.0;
-            rhs_(4) = -1.0;
+            rhs_(0) = 1.25;
+            rhs_(1) = 0.5;
+            rhs_(2) = -1.75;
+            rhs_(3) = -1.75;
+            rhs_(4) = 0.5;
         }
 
         ~TestLinearSystem() {}
@@ -190,8 +188,10 @@ TEST_CASE("GMRES") {
             Ibis::gemv(matrix_, vec, res);
         }
 
+        KOKKOS_INLINE_FUNCTION
         Ibis::real& rhs(const size_t i) const { return rhs_(i); }
 
+        KOKKOS_INLINE_FUNCTION
         Ibis::real& rhs(const size_t i, const size_t j) const {
             (void)j;
             return rhs_(i);
@@ -209,12 +209,13 @@ TEST_CASE("GMRES") {
     std::shared_ptr<LinearSystem> sys{new TestLinearSystem()};
 
     Gmres solver{sys, 5, 1e-10};
-    Ibis::Vector<Ibis::real, Kokkos::DefaultHostExecutionSpace> x{"x", 5};
-    solver.solve(sys, x);
+    Ibis::Vector<Ibis::real> x{"x", 5};
+    GmresResult result = solver.solve(sys, x);
 
-    CHECK(x(0) == doctest::Approx(0.16666666666666));
-    CHECK(x(1) == doctest::Approx(6.33333333333333));
-    CHECK(x(2) == doctest::Approx(-8.5));
-    CHECK(x(3) == doctest::Approx(13.66666666666666));
-    CHECK(x(4) == doctest::Approx(-8.83333333333333));
+    CHECK(result.success == true);
+    CHECK(x(0) == doctest::Approx(1.0));
+    CHECK(x(1) == doctest::Approx(0.5));
+    CHECK(x(2) == doctest::Approx(-1.0));
+    CHECK(x(3) == doctest::Approx(-2.0));
+    CHECK(x(4) == doctest::Approx(0.5));
 }

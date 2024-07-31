@@ -40,7 +40,7 @@ public:
     // as long as they have the same array layout
     template <class OtherExecSpace, class OtherMemSpace>
     void deep_copy_space(Vector<T, OtherExecSpace, Layout, OtherMemSpace>& other) {
-        Kokkos::deep_copy(data_, other.data_);
+        Kokkos::deep_copy(data_, other.data());
     }
 
     // this deep_copy overload copies a vector from one layout to another layout
@@ -51,13 +51,16 @@ public:
         // For the moment we'll make this general. If Layout1 and Layout2 are different
         // we cannot use Kokkos::deep_copy. This is the intended use of this function.
         // We could detect if Layout1 and Layout2 are the same, but meh...
+        auto data = data_;
         Kokkos::parallel_for(
             "Ibis::deep_copy_vector", Kokkos::RangePolicy<ExecSpace>(0, other.size()),
-            KOKKOS_LAMBDA(const size_t i) { data_(i) = other(i); });
+            KOKKOS_LAMBDA(const size_t i) { data(i) = other(i); });
     }
 
     KOKKOS_INLINE_FUNCTION
     size_t size() const { return data_.extent(0); }
+
+    Array1D<T, Layout, MemSpace> data() { return data_; }
 
 private:
     Array1D<T, Layout, MemSpace> data_;
@@ -132,10 +135,11 @@ public:
         size_t n_rows = this->n_rows();
         size_t n_cols = this->n_cols();
 
+        auto data = data_;
         Kokkos::parallel_for(
             "Matrix::deep_copy", n_rows, KOKKOS_LAMBDA(const size_t row) {
                 for (size_t col = 0; col < n_cols; col++) {
-                    (*this)(row, col) = other(row, col);
+                    data(row, col) = other(row, col);
                 }
             });
     }
