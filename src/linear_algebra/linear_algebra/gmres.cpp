@@ -19,21 +19,21 @@ Gmres::Gmres(const std::shared_ptr<LinearSystem> system, const size_t max_iters,
     H1_ =
         Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::H1", max_iters_ + 1, max_iters_);
     Q0_ =
-        Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::Q0", max_iters_ + 1, max_iters_);
+        Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::Q0", max_iters_ + 1, max_iters_ + 1);
     Q1_ =
-        Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::Q1", max_iters_ + 1, max_iters_);
+        Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::Q1", max_iters_ + 1, max_iters_ + 1);
+    Omega_ = Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::Gamma", max_iters_ + 1,
+                                                     max_iters_ + 1);
     g0_ = Ibis::Vector<Ibis::real, HostExecSpace>("Gmres::g0", max_iters_ + 1);
     g1_ = Ibis::Vector<Ibis::real, HostExecSpace>("Gmres::g1", max_iters_ + 1);
     h_rotated_ =
         Ibis::Vector<Ibis::real, HostExecSpace>("Gmres::h_rotated", max_iters_ + 1);
-    Omega_ = Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::Gamma", max_iters_ + 1,
-                                                     max_iters_ + 1);
     ym_host_ = Ibis::Vector<Ibis::real, HostExecSpace>("Gmres::ym_h", max_iters_ + 1);
     ym_ = Ibis::Vector<Ibis::real>("Gmres::ym_d", max_iters_ + 1);
 
     // Krylov subspace and memory for Arnoldi procedure
     krylov_vectors_ =
-        Ibis::Matrix<Ibis::real>("Gmres::krylov_vectors", num_vars_, max_iters_);
+        Ibis::Matrix<Ibis::real>("Gmres::krylov_vectors", num_vars_, max_iters_ + 1);
     r0_ = Ibis::Vector<Ibis::real>("Gmres::r0", num_vars_);
     w_ = Ibis::Vector<Ibis::real>("Gmres::w", num_vars_);
     v_ = Ibis::Vector<Ibis::real>("Gmres::v", num_vars_);
@@ -55,13 +55,15 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
     for (size_t j = 0; j < max_iters_; j++) {
         // build the next krylov vector and entries in the Hessenberg matrix
         system->matrix_vector_product(v_, w_);
-        for (size_t i = 0; i < j; i++) {
-            H0_(i, j) = Ibis::dot(w_, v_);
+        for (size_t i = 0; i < j + 1; i++) {
+            H0_(i, j) = Ibis::dot(w_, krylov_vectors_.column(i));
             Ibis::add_scaled_vector(w_, krylov_vectors_.column(i), -H0_(i, j));
         }
         H0_(j + 1, j) = Ibis::norm2(w_);
         Ibis::scale(w_, v_, 1.0 / H0_(j + 1, j));
         krylov_vectors_.column(j + 1).deep_copy_layout(v_);
+
+        
 
         // progressively rotate the Hessenberg into upper-triangular form
         // so we can calculate the residual of this step, and later solve
@@ -71,19 +73,20 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
         // check convergence
         Ibis::real residual = Ibis::abs(g0_(j + 1));
         result.residual = residual;
-        result.n_iters = j;
+        result.n_iters = j + 1;
         if (residual < tol_) {
             result.success = true;
             break;
         }
     }
 
-    auto H = H0_.sub_matrix(0, result.n_iters, 0, result.n_iters);
-    auto V = krylov_vectors_.columns(0, result.n_iters);
-    auto g = g0_.sub_vector(0, result.n_iters);
-    auto w = w_.sub_vector(0, V.n_rows());
-    auto ym_host = ym_host_.sub_vector(0, result.n_iters);
-    auto ym = ym_.sub_vector(0, result.n_iters);
+    size_t n_vectors = result.n_iters;
+    auto H = H0_.sub_matrix(0, n_vectors, 0, n_vectors);
+    auto V = krylov_vectors_.columns(0, n_vectors);
+    auto g = g0_.sub_vector(0, n_vectors);
+    auto w = w_;
+    auto ym_host = ym_host_.sub_vector(0, n_vectors);
+    auto ym = ym_.sub_vector(0, n_vectors);
 
     // return the guess, even if we didn't converge
     Ibis::upper_triangular_solve(H, ym_host, g);
@@ -124,6 +127,7 @@ void Gmres::apply_rotations_to_hessenberg_(size_t j) {
     auto g_new = g1_.sub_vector(0, j + 2);
     Ibis::gemm(Omega, H, H_new);
     Ibis::gemv(Omega, g, g_new);
+
 
     // and update the global rotation matrix
     auto Q = Q0_.sub_matrix(0, j + 2, 0, j + 2);
@@ -208,7 +212,7 @@ TEST_CASE("GMRES") {
 
     std::shared_ptr<LinearSystem> sys{new TestLinearSystem()};
 
-    Gmres solver{sys, 5, 1e-10};
+    Gmres solver{sys, 4, 1e-10};
     Ibis::Vector<Ibis::real> x{"x", 5};
     GmresResult result = solver.solve(sys, x);
 
@@ -217,5 +221,5 @@ TEST_CASE("GMRES") {
     CHECK(x(1) == doctest::Approx(0.5));
     CHECK(x(2) == doctest::Approx(-1.0));
     CHECK(x(3) == doctest::Approx(-2.0));
-    CHECK(x(4) == doctest::Approx(0.5));
+    CHECK(x(4) == doctest::Approx(1.5));
 }

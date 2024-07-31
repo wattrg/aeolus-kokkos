@@ -32,6 +32,9 @@ public:
 
     Vector<T, ExecSpace, Kokkos::LayoutStride, MemSpace> sub_vector(const size_t start,
                                                                     const size_t end) {
+        assert(start >= 0);
+        assert(end <= size() + 1);
+        
         return Vector<T, ExecSpace, Kokkos::LayoutStride, MemSpace>(
             Kokkos::subview(data_, Kokkos::make_pair(start, end)));
     }
@@ -99,6 +102,11 @@ public:
     Matrix<T, ExecSpace, Kokkos::LayoutStride, MemSpace> sub_matrix(
         const size_t start_row, const size_t end_row, const size_t start_col,
         const size_t end_col) {
+        assert(start_row >= 0);
+        assert(end_row <= n_rows() + 1);
+        assert(start_col >= 0);
+        assert(end_col <= n_cols() + 1);
+        
         return Matrix<T, ExecSpace, Kokkos::LayoutStride, MemSpace>(
             Kokkos::subview(data_, Kokkos::make_pair(start_row, end_row),
                             Kokkos::make_pair(start_col, end_col)));
@@ -269,9 +277,9 @@ void upper_triangular_solve(const Matrix<T, ExecSpace, MatrixLayout, MemSpace> A
     }
 }
 
-template <typename T, class ExecSpace, class Layout, class MemSpace>
-T dot(const Vector<T, ExecSpace, Layout, MemSpace>& vec1,
-      const Vector<T, ExecSpace, Layout, MemSpace>& vec2) {
+template <typename T, class ExecSpace, class Layout1, class Layout2, class MemSpace>
+T dot(const Vector<T, ExecSpace, Layout1, MemSpace>& vec1,
+      const Vector<T, ExecSpace, Layout2, MemSpace>& vec2) {
     assert(vec1.size() == vec2.size());
     T dot_product;
     Kokkos::parallel_reduce(
