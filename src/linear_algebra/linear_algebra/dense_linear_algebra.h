@@ -5,6 +5,7 @@
 #include <util/types.h>
 
 #include <Kokkos_Core.hpp>
+#include "Kokkos_Core_fwd.hpp"
 
 namespace Ibis {
 
@@ -64,6 +65,11 @@ public:
 
     Array1D<T, Layout, MemSpace> data() { return data_; }
 
+    Vector<T, Kokkos::DefaultHostExecutionSpace, Layout> host_mirror() {
+        return Vector<T, Kokkos::DefaultHostExecutionSpace, Layout>(
+            Kokkos::create_mirror_view(data_));
+    }
+
 private:
     Array1D<T, Layout, MemSpace> data_;
 };
@@ -92,7 +98,7 @@ public:
         auto data = data_;
         Kokkos::deep_copy(data_, T(0.0));
         Kokkos::parallel_for(
-            "Matrix::set_to_identity", data_.extent(0),
+            "Matrix::set_to_identity", Kokkos::RangePolicy<ExecSpace>(0, data_.extent(0)),
             KOKKOS_LAMBDA(const size_t i) { data(i, i) = T(1.0); });
     }
 
@@ -142,12 +148,24 @@ public:
 
         auto data = data_;
         Kokkos::parallel_for(
-            "Matrix::deep_copy", n_rows, KOKKOS_LAMBDA(const size_t row) {
+            "Matrix::deep_copy", Kokkos::RangePolicy<ExecSpace>(0, n_rows), KOKKOS_LAMBDA(const size_t row) {
                 for (size_t col = 0; col < n_cols; col++) {
                     data(row, col) = other(row, col);
                 }
             });
     }
+
+    template <typename OtherSpace, typename OtherMemSpace>
+    void deep_copy_space(Matrix<T, OtherSpace, Layout, OtherMemSpace>& other) {
+        Kokkos::deep_copy(data_, other.data());
+    }
+
+    Matrix<T, Kokkos::DefaultHostExecutionSpace, Layout> host_mirror() {
+        return Matrix<T, Kokkos::DefaultHostExecutionSpace, Layout>(
+            Kokkos::create_mirror_view(data_));
+    }
+
+    Array2D<T, Layout, MemSpace> data() { return data_; }
 
     KOKKOS_INLINE_FUNCTION
     size_t n_rows() const { return data_.extent(0); }

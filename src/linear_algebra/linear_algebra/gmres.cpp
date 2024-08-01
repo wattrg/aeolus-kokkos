@@ -164,26 +164,30 @@ TEST_CASE("GMRES") {
 
         TestLinearSystem() {
             matrix_ = Ibis::Matrix<Ibis::real, ExecSpace>("A", 5, 5);
-            matrix_(0, 0) = 2.0;
-            matrix_(0, 1) = -1.0;
-            matrix_(1, 0) = -1.0;
-            matrix_(1, 1) = 2.0;
-            matrix_(1, 2) = -1.0;
-            matrix_(2, 1) = -1.0;
-            matrix_(2, 2) = 2.0;
-            matrix_(2, 3) = -1.0;
-            matrix_(3, 2) = -1.0;
-            matrix_(3, 3) = 2.0;
-            matrix_(3, 4) = -1.0;
-            matrix_(4, 3) = -1.0;
-            matrix_(4, 4) = 2.0;
+            auto matrix_h = matrix_.host_mirror();
+            matrix_h(0, 0) = 2.0;
+            matrix_h(0, 1) = -1.0;
+            matrix_h(1, 0) = -1.0;
+            matrix_h(1, 1) = 2.0;
+            matrix_h(1, 2) = -1.0;
+            matrix_h(2, 1) = -1.0;
+            matrix_h(2, 2) = 2.0;
+            matrix_h(2, 3) = -1.0;
+            matrix_h(3, 2) = -1.0;
+            matrix_h(3, 3) = 2.0;
+            matrix_h(3, 4) = -1.0;
+            matrix_h(4, 3) = -1.0;
+            matrix_h(4, 4) = 2.0;
+            matrix_.deep_copy_space(matrix_h);
 
             rhs_ = Ibis::Vector<Ibis::real, ExecSpace>("rhs", 5);
-            rhs_(0) = 2.0;
-            rhs_(1) = 0.0;
-            rhs_(2) = -3.5;
-            rhs_(3) = 3.5;
-            rhs_(4) = -0.5;
+            auto rhs_h = rhs_.host_mirror();
+            rhs_h(0) = 2.0;
+            rhs_h(1) = 0.0;
+            rhs_h(2) = -3.5;
+            rhs_h(3) = 3.5;
+            rhs_h(4) = -0.5;
+            rhs_.deep_copy_space(rhs_h);
         }
 
         ~TestLinearSystem() {}
@@ -219,10 +223,13 @@ TEST_CASE("GMRES") {
     Ibis::Vector<Ibis::real> x{"x", 5};
     GmresResult result = solver.solve(sys, x);
 
+    auto x_h = x.host_mirror();
+    x_h.deep_copy_space(x);
+
     CHECK(result.success == true);
-    CHECK(x(0) == doctest::Approx(1.0));
-    CHECK(x(1) == doctest::Approx(0.0));
-    CHECK(x(2) == doctest::Approx(-1.0));
-    CHECK(x(3) == doctest::Approx(1.5));
-    CHECK(x(4) == doctest::Approx(0.5));
+    CHECK(x_h(0) == doctest::Approx(1.0));
+    CHECK(x_h(1) == doctest::Approx(0.0));
+    CHECK(x_h(2) == doctest::Approx(-1.0));
+    CHECK(x_h(3) == doctest::Approx(1.5));
+    CHECK(x_h(4) == doctest::Approx(0.5));
 }
