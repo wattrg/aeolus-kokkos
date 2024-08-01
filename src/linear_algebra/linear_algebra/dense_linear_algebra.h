@@ -32,7 +32,6 @@ public:
 
     Vector<T, ExecSpace, Kokkos::LayoutStride, MemSpace> sub_vector(const size_t start,
                                                                     const size_t end) {
-        assert(start >= 0);
         assert(end <= size() + 1);
         
         return Vector<T, ExecSpace, Kokkos::LayoutStride, MemSpace>(
@@ -102,9 +101,7 @@ public:
     Matrix<T, ExecSpace, Kokkos::LayoutStride, MemSpace> sub_matrix(
         const size_t start_row, const size_t end_row, const size_t start_col,
         const size_t end_col) {
-        assert(start_row >= 0);
         assert(end_row <= n_rows() + 1);
-        assert(start_col >= 0);
         assert(end_col <= n_cols() + 1);
         
         return Matrix<T, ExecSpace, Kokkos::LayoutStride, MemSpace>(
