@@ -5,6 +5,7 @@ add_library(
 	solvers/solver.h
 	solvers/cfl.cpp
 	solvers/steady_state.cpp
+	solvers/jfnk.cpp
 )
 
 target_link_libraries(

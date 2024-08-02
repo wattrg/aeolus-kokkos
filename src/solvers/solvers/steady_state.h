@@ -39,7 +39,7 @@ public:
     // some specific methods
     void set_pseudo_time_step(Ibis::real dt_star);
 
-    void update_solution(const ConservedQuantities<Ibis::dual>& cq);
+    void set_solution(const ConservedQuantities<Ibis::dual>& cq);
 
 private:
     Ibis::real dt_star_;

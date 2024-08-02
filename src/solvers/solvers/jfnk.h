@@ -10,24 +10,29 @@
 #include <util/numeric_types.h>
 #include <nlohmann/json.hpp>
 #include <memory>
+#include <linear_algebra/gmres.h>
 
 using json = nlohmann::json;
 
 class Jfnk {
 public:
-    Jfnk(std::unique_ptr<CflSchedule> cfl, size_t max_steps);
+    Jfnk(std::unique_ptr<CflSchedule>&& cfl, size_t max_steps);
 
     Jfnk(json config);
     
-    void step(LinearSystem& system);
+    void step(std::shared_ptr<LinearSystem> system, ConservedQuantities<Ibis::dual>& cq);
 
-    void solve(LinearSystem& system, Sim<Ibis::dual> sim);
+    void solve(std::shared_ptr<LinearSystem> system, Sim<Ibis::dual>& sim);
 
     size_t max_steps() const { return max_steps_; }
 
 private:
     size_t max_steps_;
     std::unique_ptr<CflSchedule> cfl_;
+
+    Gmres gmres_;
+
+    Ibis::Vector<Ibis::real> x_;
 };
 
 #endif
