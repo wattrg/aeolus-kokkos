@@ -16,18 +16,21 @@ using json = nlohmann::json;
 
 class Jfnk {
 public:
-    Jfnk(std::unique_ptr<CflSchedule>&& cfl, size_t max_steps);
-
-    Jfnk(json config);
+    Jfnk() {}
     
-    void step(std::shared_ptr<LinearSystem> system, ConservedQuantities<Ibis::dual>& cq);
+    Jfnk(std::shared_ptr<LinearSystem> system, std::unique_ptr<CflSchedule>&&, json config);
+    
+    void step(ConservedQuantities<Ibis::dual>& cq,  FlowStates<Ibis::dual>& fs);
 
-    void solve(std::shared_ptr<LinearSystem> system, Sim<Ibis::dual>& sim);
+    void solve(Sim<Ibis::dual>& sim);
 
     size_t max_steps() const { return max_steps_; }
 
 private:
     size_t max_steps_;
+
+    std::shared_ptr<LinearSystem> system_;
+
     std::unique_ptr<CflSchedule> cfl_;
 
     Gmres gmres_;

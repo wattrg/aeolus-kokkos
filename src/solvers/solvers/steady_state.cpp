@@ -17,11 +17,6 @@
 //     fs_tmp_ = FlowStates<Ibis::dual>(n_cells_);
 // }
 
-void SteadyStateLinearisation::update_solution(
-    const ConservedQuantities<Ibis::dual>& cq) {
-    cq_tmp_.deep_copy(cq);
-}
-
 void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                                      Ibis::Vector<Ibis::real>& result) {
     // set the dual components of the conserved quantities
@@ -29,10 +24,12 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
     auto residuals = residuals_;
     Ibis::real dt_star = dt_star_;
     auto cq_tmp = cq_tmp_;
+    auto cq = cq_;
     Kokkos::parallel_for(
         "SteadyStateLinearisation::set_dual", n_cells_, KOKKOS_LAMBDA(const int cell_i) {
             const int vector_idx = cell_i * n_cons;
             for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
+                cq_tmp(cell_i, cons_i).real() = cq(cell_i, cons_i).real();
                 cq_tmp(cell_i, cons_i).dual() = vec(vector_idx + cons_i);
             }
         });
@@ -69,4 +66,15 @@ void SteadyStateLinearisation::eval_rhs() {
                 rhs(vector_idx + cons_i) = Ibis::real_part(residuals(cell_i, cons_i));
             }
         });
+}
+
+SteadyState::SteadyState(json config, GridBlock<Ibis::dual>& grid, std::string grid_dir, std::string flow_dir) : Solver(grid_dir, flow_dir) {
+    sim_ = std::shared_ptr<Sim<Ibis::dual>> {Sim<Ibis::dual>(std::move(grid), config)};
+
+    size_t number_cells = sim_->grid.num_total_cells();
+    size_t dim = sim_->grid.dim();
+    fs_ = FlowStates<Ibis::dual>(number_cells);
+    cq_ = ConservedQuantities<Ibis::dual>(number_cells, dim);
+
+    SteadyStateLinearisation system = SteadyStateLinearisation(sim_, cq_, fs_);
 }

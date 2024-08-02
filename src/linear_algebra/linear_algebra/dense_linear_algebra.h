@@ -70,6 +70,10 @@ public:
             Kokkos::create_mirror_view(data_));
     }
 
+    void zero() {
+        Kokkos::deep_copy(data_, T(0.0));
+    }
+
 private:
     Array1D<T, Layout, MemSpace> data_;
 };

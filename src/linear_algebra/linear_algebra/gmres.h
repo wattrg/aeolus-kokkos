@@ -30,6 +30,8 @@ public:
     using HostExecSpace = Ibis::DefaultHostExecSpace;
 
 public:
+    Gmres() {};
+    
     Gmres(const std::shared_ptr<LinearSystem> system, const size_t max_iters,
           Ibis::real tol);
 

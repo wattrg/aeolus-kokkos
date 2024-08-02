@@ -13,8 +13,8 @@
 class SteadyStateLinearisation : public LinearSystem {
 public:
     // Construction / destruction
-    // SteadyStateLinearisation(const size_t n_cells, const size_t n_cons, const size_t
-    // dim);
+    SteadyStateLinearisation(std::shared_ptr<Sim<Ibis::dual>>& sim, ConservedQuantities<Ibis::dual> cq,FlowStates<Ibis::dual> fs);
+
     ~SteadyStateLinearisation() {}
 
     // SystemLinearisation interface
@@ -39,7 +39,6 @@ public:
     // some specific methods
     void set_pseudo_time_step(Ibis::real dt_star);
 
-    void set_solution(const ConservedQuantities<Ibis::dual>& cq);
 
 private:
     Ibis::real dt_star_;
@@ -49,7 +48,7 @@ private:
     size_t n_cons_;
     size_t n_vars_;
     size_t dim_;
-    // ConservedQuantitiese<Ibis::dual> cq_;  // the current solution (not owned)
+    ConservedQuantities<Ibis::dual> cq_;  // the current solution (not owned)
     FlowStates<Ibis::dual> fs_;  // the current solution (not owned)
 
     Ibis::Vector<Ibis::real> rhs_;  // the rhs of the system of equations
@@ -98,19 +97,15 @@ private:
     std::string stop_reason(unsigned int step);
     bool stop_now(unsigned int step);
     int max_step() const { return jfnk_.max_steps(); }
-    int count_bad_cells() { return sim_.fv.count_bad_cells(fs_, sim_.grid.num_cells()); }
+    int count_bad_cells() { return sim_->fv.count_bad_cells(fs_, sim_->grid.num_cells()); }
 
 private:
     // memory
     ConservedQuantities<Ibis::dual> cq_;
-    ConservedQuantities<Ibis::dual> residuals_;
     FlowStates<Ibis::dual> fs_;
 
     // the core simulation
-    Sim<Ibis::dual> sim_;
-
-    // linearisation of the system about the current solution
-    SteadyStateLinearisation linearisation_;
+    std::shared_ptr<Sim<Ibis::dual>> sim_;
 };
 
 #endif
