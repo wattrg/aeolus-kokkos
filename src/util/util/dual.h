@@ -97,7 +97,7 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     Dual<T> operator+=(const T& re) {
-        this->_real_ += re;
+        this->real_ += re;
         return *this;
     }
 

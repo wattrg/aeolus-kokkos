@@ -1,5 +1,6 @@
 #include <doctest/doctest.h>
 #include <linear_algebra/dense_linear_algebra.h>
+
 #include "Kokkos_Core_fwd.hpp"
 
 Ibis::Vector<Ibis::real> small_test_vector() {
@@ -242,7 +243,6 @@ TEST_CASE("Ibis::Matrix::row") {
     A_h(2, 2) = 13.0;
     A_h(2, 3) = 14.0;
     A_h(2, 4) = 15.0;
-
 
     auto row = A_h.row(1);
 

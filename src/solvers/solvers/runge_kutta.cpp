@@ -17,7 +17,7 @@ Ibis::real ButcherTableau::b(size_t i) { return b_[i]; }
 Ibis::real ButcherTableau::c(size_t i) { return c_[i - 1]; }
 size_t ButcherTableau::num_stages() { return num_stages_; }
 
-RungeKutta::RungeKutta(json config, GridBlock<Ibis::real>& grid, std::string grid_dir,
+RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid_dir,
                        std::string flow_dir)
     : Solver(grid_dir, flow_dir) {
     // configuration

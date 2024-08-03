@@ -37,7 +37,7 @@ protected:
     virtual void print_progress(unsigned int step, Ibis::real wc) = 0;
     virtual bool stop_now(unsigned int step) = 0;
     virtual std::string stop_reason(unsigned step) = 0;
-    virtual int max_step() const = 0;
+    virtual size_t max_step() const = 0;
 
     // error checking
     virtual int count_bad_cells() = 0;

@@ -13,8 +13,8 @@ using json = nlohmann::json;
 template <typename T>
 struct Sim {
     Sim() {}
-    
-    Sim(GridBlock<T>&& grid, json config);
+
+    Sim(GridBlock<T> grid, json config);
 
     FiniteVolume<T> fv;
     GridBlock<T> grid;

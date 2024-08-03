@@ -5,6 +5,7 @@
 #include <gas/transport_properties.h>
 #include <simulation/simulation.h>
 #include <solvers/steady_state.h>
+#include <solvers/cfl.h>
 
 // SteadyStateLinearisation::SteadyStateLinearisation(const size_t n_cells,
 //                                                    const size_t n_cons,
@@ -45,7 +46,7 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
     Kokkos::parallel_for(
         "SteadyStateLinearisation::set_vector", n_cells_,
         KOKKOS_LAMBDA(const int cell_i) {
-            const int vector_idx = cell_i * n_cons;
+            const size_t vector_idx = cell_i * n_cons;
             for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
                 result(vector_idx + cons_i) =
                     1 / dt_star - Ibis::dual_part(residuals(cell_i, cons_i));
@@ -61,20 +62,77 @@ void SteadyStateLinearisation::eval_rhs() {
     auto residuals = residuals_;
     Kokkos::parallel_for(
         "SteadyStateLinearisation::eval_rhs", n_cells_, KOKKOS_LAMBDA(const int cell_i) {
-            const int vector_idx = cell_i * n_cons;
+            const size_t vector_idx = cell_i * n_cons;
             for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
                 rhs(vector_idx + cons_i) = Ibis::real_part(residuals(cell_i, cons_i));
             }
         });
 }
 
-SteadyState::SteadyState(json config, GridBlock<Ibis::dual>& grid, std::string grid_dir, std::string flow_dir) : Solver(grid_dir, flow_dir) {
-    sim_ = std::shared_ptr<Sim<Ibis::dual>> {Sim<Ibis::dual>(std::move(grid), config)};
 
-    size_t number_cells = sim_->grid.num_total_cells();
+SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string grid_dir,
+                         std::string flow_dir)
+    : Solver(grid_dir, flow_dir) {
+    sim_ = std::shared_ptr<Sim<Ibis::dual>>{new Sim<Ibis::dual>(grid, config)};
+
+    size_t n_cells = sim_->grid.num_total_cells();
     size_t dim = sim_->grid.dim();
-    fs_ = FlowStates<Ibis::dual>(number_cells);
-    cq_ = ConservedQuantities<Ibis::dual>(number_cells, dim);
+    fs_ = FlowStates<Ibis::dual>(n_cells);
+    cq_ = ConservedQuantities<Ibis::dual>(n_cells, dim);
 
-    SteadyStateLinearisation system = SteadyStateLinearisation(sim_, cq_, fs_);
+    // set up the linear system and non-linear solver
+    std::unique_ptr<LinearSystem> system =
+        std::unique_ptr<LinearSystem>(new SteadyStateLinearisation(sim_, cq_, fs_));
+    auto cfl = make_cfl_schedule(config.at("cfl"));
+    jfnk_ = Jfnk(std::move(system), std::move(cfl), config);
+
+    // configuration
+    print_frequency_ = config.at("print_frequency");
+    plot_frequency_ = config.at("plot_frequency");
+    diagnostics_frequency_ = config.at("diagnostics_frequency");
+
+    // I/O
+    FlowFormat flow_format = string_to_flow_format((config.at("io").at("flow_format")));
+    // io_ = FVIO<Ibis::real>(flow_format, flow_format, 1);
+}
+
+int SteadyState::initialise() { return 0; }
+
+int SteadyState::take_step() {
+    jfnk_.step(cq_);
+    return 0;
+}
+
+bool SteadyState::print_this_step(unsigned int step) {
+    return (step != 0 && step % print_frequency_ == 0);
+}
+
+bool SteadyState::residuals_this_step(unsigned int step) {
+    return ((diagnostics_frequency_ > 0) && (step != 0) &&
+            (step % diagnostics_frequency_ == 0));
+}
+
+bool SteadyState::plot_this_step(unsigned int step) {
+    return (step != 0 && plot_frequency_ % plot_frequency_ == 0);
+}
+
+int SteadyState::plot_solution(unsigned int step) {
+    Ibis::real t = Ibis::real(step);
+    int result = io_.write(fs_, sim_->fv, sim_->grid, sim_->gas_model, sim_->trans_prop, t);
+    spdlog::info("  written flow solution: step {}", step);
+    return result;
+}
+
+void SteadyState::print_progress(unsigned int step, Ibis::real wc) {
+    spdlog::info("  step: {:>8}, global residual {:.6e}, wc = {:.1f}s", step, -1.0, wc);
+}
+
+bool SteadyState::stop_now(unsigned int step) { return (step >= max_step() - 1); }
+
+std::string SteadyState::stop_reason(unsigned int step) {
+    if (step > max_step()) return "reached max_step";
+    if (jfnk_.global_residual() < jfnk_.target_residual()) {
+        return "reached target residual";
+    }
+    return "Shouldn't reach here";
 }

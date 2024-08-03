@@ -39,7 +39,7 @@ private:
 
 class RungeKutta : public Solver {
 public:
-    RungeKutta(json config, GridBlock<Ibis::real>& grid, std::string grid_dir,
+    RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid_dir,
                std::string flow_dir);
 
     ~RungeKutta() {}
@@ -82,7 +82,7 @@ private:
     void print_progress(unsigned int step, Ibis::real wc);
     std::string stop_reason(unsigned int step);
     bool stop_now(unsigned int step);
-    int max_step() const { return max_step_; }
+    size_t max_step() const { return max_step_; }
     int count_bad_cells() { return fv_.count_bad_cells(flow_, grid_.num_cells()); }
 
     // this computes the L2 norms of the time derivates evaluated

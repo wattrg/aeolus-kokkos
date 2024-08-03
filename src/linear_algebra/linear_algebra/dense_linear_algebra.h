@@ -5,6 +5,7 @@
 #include <util/types.h>
 
 #include <Kokkos_Core.hpp>
+
 #include "Kokkos_Core_fwd.hpp"
 
 namespace Ibis {
@@ -34,7 +35,7 @@ public:
     Vector<T, ExecSpace, Kokkos::LayoutStride, MemSpace> sub_vector(const size_t start,
                                                                     const size_t end) {
         assert(end <= size() + 1);
-        
+
         return Vector<T, ExecSpace, Kokkos::LayoutStride, MemSpace>(
             Kokkos::subview(data_, Kokkos::make_pair(start, end)));
     }
@@ -70,9 +71,7 @@ public:
             Kokkos::create_mirror_view(data_));
     }
 
-    void zero() {
-        Kokkos::deep_copy(data_, T(0.0));
-    }
+    void zero() { Kokkos::deep_copy(data_, T(0.0)); }
 
 private:
     Array1D<T, Layout, MemSpace> data_;
@@ -113,7 +112,7 @@ public:
         const size_t end_col) {
         assert(end_row <= n_rows() + 1);
         assert(end_col <= n_cols() + 1);
-        
+
         return Matrix<T, ExecSpace, Kokkos::LayoutStride, MemSpace>(
             Kokkos::subview(data_, Kokkos::make_pair(start_row, end_row),
                             Kokkos::make_pair(start_col, end_col)));
@@ -152,7 +151,8 @@ public:
 
         auto data = data_;
         Kokkos::parallel_for(
-            "Matrix::deep_copy", Kokkos::RangePolicy<ExecSpace>(0, n_rows), KOKKOS_LAMBDA(const size_t row) {
+            "Matrix::deep_copy", Kokkos::RangePolicy<ExecSpace>(0, n_rows),
+            KOKKOS_LAMBDA(const size_t row) {
                 for (size_t col = 0; col < n_cols; col++) {
                     data(row, col) = other(row, col);
                 }

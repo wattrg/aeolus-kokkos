@@ -13,7 +13,9 @@
 class SteadyStateLinearisation : public LinearSystem {
 public:
     // Construction / destruction
-    SteadyStateLinearisation(std::shared_ptr<Sim<Ibis::dual>>& sim, ConservedQuantities<Ibis::dual> cq,FlowStates<Ibis::dual> fs);
+    SteadyStateLinearisation(std::shared_ptr<Sim<Ibis::dual>>& sim,
+                             ConservedQuantities<Ibis::dual> cq,
+                             FlowStates<Ibis::dual> fs);
 
     ~SteadyStateLinearisation() {}
 
@@ -39,7 +41,6 @@ public:
     // some specific methods
     void set_pseudo_time_step(Ibis::real dt_star);
 
-
 private:
     Ibis::real dt_star_;
 
@@ -49,7 +50,7 @@ private:
     size_t n_vars_;
     size_t dim_;
     ConservedQuantities<Ibis::dual> cq_;  // the current solution (not owned)
-    FlowStates<Ibis::dual> fs_;  // the current solution (not owned)
+    FlowStates<Ibis::dual> fs_;           // the current solution (not owned)
 
     Ibis::Vector<Ibis::real> rhs_;  // the rhs of the system of equations
 
@@ -61,9 +62,10 @@ private:
     std::shared_ptr<Sim<Ibis::dual>> sim_;
 };
 
+
 class SteadyState : public Solver {
 public:
-    SteadyState(json config, GridBlock<Ibis::dual>& grid, std::string grid_dir,
+    SteadyState(json config, GridBlock<Ibis::dual> grid, std::string grid_dir,
                 std::string flow_dir);
 
     ~SteadyState() {}
@@ -91,13 +93,16 @@ private:
     int finalise();
     int take_step();
     bool print_this_step(unsigned int step);
+    bool residuals_this_step(unsigned int step);
     bool plot_this_step(unsigned int step);
     int plot_solution(unsigned int step);
     void print_progress(unsigned int step, Ibis::real wc);
     std::string stop_reason(unsigned int step);
     bool stop_now(unsigned int step);
-    int max_step() const { return jfnk_.max_steps(); }
-    int count_bad_cells() { return sim_->fv.count_bad_cells(fs_, sim_->grid.num_cells()); }
+    size_t max_step() const { return jfnk_.max_steps(); }
+    int count_bad_cells() {
+        return sim_->fv.count_bad_cells(fs_, sim_->grid.num_cells());
+    }
 
 private:
     // memory

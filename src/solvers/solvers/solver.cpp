@@ -20,7 +20,7 @@ int Solver::solve() {
         return success;
     }
     spdlog::stopwatch sw;
-    for (int step = 0; step < max_step(); step++) {
+    for (size_t step = 0; step < max_step(); step++) {
         int result = take_step();
         if (result != 0) {
             spdlog::error("step {} failed", step);
@@ -68,7 +68,8 @@ std::unique_ptr<Solver> make_solver(json config, std::string grid_dir,
     std::string solver_name = solver_config.at("name");
     if (solver_name == "runge_kutta") {
         GridBlock<Ibis::real> grid(grid_file, grid_config);
-        return std::unique_ptr<Solver>(new RungeKutta(config, grid, grid_dir, flow_dir));
+        return std::unique_ptr<Solver>(
+            new RungeKutta(config, std::move(grid), grid_dir, flow_dir));
     }
     return NULL;
 }
