@@ -304,7 +304,17 @@ KOKKOS_INLINE_FUNCTION T real_part(const Dual<T>& d) {
 }
 
 template <typename T>
+KOKKOS_INLINE_FUNCTION T& real_part(Dual<T>& d) {
+    return d.real();
+}
+
+template <typename T>
 KOKKOS_INLINE_FUNCTION T dual_part(const Dual<T>& d) {
+    return d.dual();
+}
+
+template <typename T>
+KOKKOS_INLINE_FUNCTION T& dual_part(Dual<T>& d) {
     return d.dual();
 }
 

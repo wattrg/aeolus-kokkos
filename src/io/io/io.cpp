@@ -187,3 +187,4 @@ void FVOutput<T>::add_variable(std::string name) {
 }
 
 template class FVIO<Ibis::real>;
+template class FVIO<Ibis::dual>;

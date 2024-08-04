@@ -54,8 +54,15 @@ KOKKOS_INLINE_FUNCTION T copysign(const T& mag, const T& sign) {
 
 KOKKOS_INLINE_FUNCTION real real_part(const real& x) { return x; }
 
+KOKKOS_INLINE_FUNCTION real& real_part(real& x) { return x; }
+
 KOKKOS_INLINE_FUNCTION real dual_part(const real& x) {
     (void)x;
+    return 0.0;
+}
+
+KOKKOS_INLINE_FUNCTION real dual_part(real& x) {
+    (void) x;
     return 0.0;
 }
 

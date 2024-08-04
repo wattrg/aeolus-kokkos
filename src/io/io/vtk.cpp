@@ -54,7 +54,7 @@ void write_scalar_field_ascii(std::ofstream& f,
     f << "format='ascii'>" << std::endl;
 
     for (size_t i = 0; i < num_values; i++) {
-        T value = accessor->access(fs, fv, grid, gas_model, i);
+        Ibis::real value = Ibis::real_part(accessor->access(fs, fv, grid, gas_model, i));
         f << value << std::endl;
     }
 
@@ -76,7 +76,7 @@ void write_vector_field_ascii(std::ofstream& f,
 
     for (size_t i = 0; i < num_values; i++) {
         Vector3<T> vec = accessor->access(fs, fv, grid, gas_model, i);
-        f << vec.x << " " << vec.y << " " << vec.z << std::endl;
+        f << Ibis::real_part(vec.x) << " " << Ibis::real_part(vec.y) << " " << Ibis::real_part(vec.z) << std::endl;
     }
 
     f << "</DataArray>" << std::endl;
@@ -92,7 +92,7 @@ void write_vector3s_ascii(std::ofstream& f,
     f << "format='ascii'>\n";
 
     for (size_t i = 0; i < num_values; i++) {
-        f << vec.x(i) << " " << vec.y(i) << " " << vec.z(i) << std::endl;
+        f << Ibis::real_part(vec.x(i)) << " " << Ibis::real_part(vec.y(i)) << " " << Ibis::real_part(vec.z(i)) << std::endl;
     }
 
     f << "</DataArray>" << std::endl;
@@ -199,6 +199,7 @@ void VtkTextOutput<T>::write_coordinating_file(std::string plot_dir) {
 }
 
 template class VtkTextOutput<Ibis::real>;
+template class VtkTextOutput<Ibis::dual>;
 
 template <typename T>
 VtkBinaryOutput<T>::VtkBinaryOutput() {
@@ -235,9 +236,9 @@ void VtkBinaryOutput<T>::write_scalar_field_binary(
 
     // pack the data into the bytes array
     for (size_t i = 0; i < num_values; i++) {
-        T value = accessor->access(fs, fv, grid, gas_model, i);
+        Ibis::real value = Ibis::real_part(accessor->access(fs, fv, grid, gas_model, i));
         std::byte* value_begin = reinterpret_cast<std::byte*>(&value);
-        std::byte* value_end = value_begin + sizeof(T);
+        std::byte* value_end = value_begin + sizeof(value);
         packed_data_.insert(packed_data_.end(), value_begin, value_end);
     }
     f << "</DataArray>\n";
@@ -265,15 +266,15 @@ void VtkBinaryOutput<T>::write_vector_field_binary(
 
     for (size_t i = 0; i < num_values; i++) {
         Vector3<T> value = accessor->access(fs, fv, grid, gas_model, i);
-        T x = value.x;
-        T y = value.y;
-        T z = value.z;
+        Ibis::real x = Ibis::real_part(value.x);
+        Ibis::real y = Ibis::real_part(value.y);
+        Ibis::real z = Ibis::real_part(value.z);
         std::byte* x_begin = reinterpret_cast<std::byte*>(&x);
         std::byte* y_begin = reinterpret_cast<std::byte*>(&y);
         std::byte* z_begin = reinterpret_cast<std::byte*>(&z);
-        packed_data_.insert(packed_data_.end(), x_begin, x_begin + sizeof(T));
-        packed_data_.insert(packed_data_.end(), y_begin, y_begin + sizeof(T));
-        packed_data_.insert(packed_data_.end(), z_begin, z_begin + sizeof(T));
+        packed_data_.insert(packed_data_.end(), x_begin, x_begin + sizeof(x));
+        packed_data_.insert(packed_data_.end(), y_begin, y_begin + sizeof(y));
+        packed_data_.insert(packed_data_.end(), z_begin, z_begin + sizeof(z));
     }
 
     f << "</DataArray>\n";
@@ -298,15 +299,15 @@ void VtkBinaryOutput<T>::write_vector3s_binary(
     packed_data_.insert(packed_data_.end(), num_bytes_begin, num_bytes_end);
 
     for (size_t i = 0; i < num_values; i++) {
-        T x = vec.x(i);
-        T y = vec.y(i);
-        T z = vec.z(i);
+        Ibis::real x = Ibis::real_part(vec.x(i));
+        Ibis::real y = Ibis::real_part(vec.y(i));
+        Ibis::real z = Ibis::real_part(vec.z(i));
         std::byte* x_begin = reinterpret_cast<std::byte*>(&x);
         std::byte* y_begin = reinterpret_cast<std::byte*>(&y);
         std::byte* z_begin = reinterpret_cast<std::byte*>(&z);
-        packed_data_.insert(packed_data_.end(), x_begin, x_begin + sizeof(T));
-        packed_data_.insert(packed_data_.end(), y_begin, y_begin + sizeof(T));
-        packed_data_.insert(packed_data_.end(), z_begin, z_begin + sizeof(T));
+        packed_data_.insert(packed_data_.end(), x_begin, x_begin + sizeof(x));
+        packed_data_.insert(packed_data_.end(), y_begin, y_begin + sizeof(y));
+        packed_data_.insert(packed_data_.end(), z_begin, z_begin + sizeof(z));
     }
 
     f << "</DataArray>" << std::endl;
@@ -448,3 +449,4 @@ void VtkBinaryOutput<T>::write_coordinating_file(std::string plot_dir) {
 }
 
 template class VtkBinaryOutput<Ibis::real>;
+template class VtkBinaryOutput<Ibis::dual>;

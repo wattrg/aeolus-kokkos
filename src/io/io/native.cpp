@@ -32,7 +32,7 @@ int NativeTextOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     }
     temp << std::fixed << std::setprecision(16);
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        temp << fs.gas.temp(cell_i) << std::endl;
+        temp << Ibis::real_part(fs.gas.temp(cell_i)) << std::endl;
     }
     temp.close();
 
@@ -43,7 +43,7 @@ int NativeTextOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     }
     pressure << std::fixed << std::setprecision(16);
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        pressure << fs.gas.pressure(cell_i) << std::endl;
+        pressure << Ibis::real_part(fs.gas.pressure(cell_i)) << std::endl;
     }
     pressure.close();
 
@@ -54,7 +54,7 @@ int NativeTextOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     }
     vx << std::fixed << std::setprecision(16);
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        vx << fs.vel.x(cell_i) << std::endl;
+        vx << Ibis::real_part(fs.vel.x(cell_i)) << std::endl;
     }
     vx.close();
 
@@ -65,7 +65,7 @@ int NativeTextOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     }
     vy << std::fixed << std::setprecision(16);
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        vy << fs.vel.y(cell_i) << std::endl;
+        vy << Ibis::real_part(fs.vel.y(cell_i)) << std::endl;
     }
     vy.close();
 
@@ -77,7 +77,7 @@ int NativeTextOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         }
         vz << std::fixed << std::setprecision(16);
         for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-            vz << fs.vel.z(cell_i) << std::endl;
+            vz << Ibis::real_part(fs.vel.z(cell_i)) << std::endl;
         }
         vz.close();
     }
@@ -85,6 +85,7 @@ int NativeTextOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     return 0;
 }
 template class NativeTextOutput<Ibis::real>;
+template class NativeTextOutput<Ibis::dual>;
 
 template <typename T>
 int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs,
@@ -109,7 +110,7 @@ int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs,
     }
     size_t cell_i = 0;
     while (getline(temp, line)) {
-        fs.gas.temp(cell_i) = stod(line);
+        Ibis::real_part(fs.gas.temp(cell_i)) = stod(line);
         cell_i++;
     }
     if (cell_i != num_cells) {
@@ -126,7 +127,7 @@ int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs,
     }
     cell_i = 0;
     while (getline(pressure, line)) {
-        fs.gas.pressure(cell_i) = stod(line);
+        Ibis::real_part(fs.gas.pressure(cell_i)) = stod(line);
         cell_i++;
     }
     pressure.close();
@@ -138,7 +139,7 @@ int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs,
     }
     cell_i = 0;
     while (getline(vx, line)) {
-        fs.vel.x(cell_i) = stod(line);
+        Ibis::real_part(fs.vel.x(cell_i)) = stod(line);
         cell_i++;
     }
     vx.close();
@@ -150,7 +151,7 @@ int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs,
     }
     cell_i = 0;
     while (getline(vy, line)) {
-        fs.vel.y(cell_i) = stod(line);
+        Ibis::real_part(fs.vel.y(cell_i)) = stod(line);
         cell_i++;
     }
     vy.close();
@@ -164,7 +165,7 @@ int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs,
 
         cell_i = 0;
         while (getline(vz, line)) {
-            fs.vel.z(cell_i) = stod(line);
+            Ibis::real_part(fs.vel.z(cell_i)) = stod(line);
             cell_i++;
         }
         vz.close();
@@ -179,6 +180,7 @@ int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs,
     return 0;
 }
 template class NativeTextInput<Ibis::real>;
+template class NativeTextInput<Ibis::dual>;
 
 template <typename T>
 int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
@@ -207,7 +209,7 @@ int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        write_binary<Ibis::real>(temp, fs.gas.temp(cell_i));
+        write_binary<Ibis::real>(temp, Ibis::real_part(fs.gas.temp(cell_i)));
     }
     temp.close();
 
@@ -217,7 +219,7 @@ int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        write_binary<Ibis::real>(pressure, fs.gas.pressure(cell_i));
+        write_binary<Ibis::real>(pressure, Ibis::real_part(fs.gas.pressure(cell_i)));
     }
     pressure.close();
 
@@ -227,7 +229,7 @@ int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        write_binary<Ibis::real>(vx, fs.vel.x(cell_i));
+        write_binary<Ibis::real>(vx, Ibis::real_part(fs.vel.x(cell_i)));
     }
     vx.close();
 
@@ -237,7 +239,7 @@ int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        write_binary<Ibis::real>(vy, fs.vel.y(cell_i));
+        write_binary<Ibis::real>(vy, Ibis::real_part(fs.vel.y(cell_i)));
     }
     vy.close();
 
@@ -248,7 +250,7 @@ int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
             return 1;
         }
         for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-            write_binary<Ibis::real>(vz, fs.vel.z(cell_i));
+            write_binary<Ibis::real>(vz, Ibis::real_part(fs.vel.z(cell_i)));
         }
         vz.close();
     }
@@ -256,6 +258,7 @@ int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     return 0;
 }
 template class NativeBinaryOutput<Ibis::real>;
+template class NativeBinaryOutput<Ibis::dual>;
 
 template <typename T>
 int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
@@ -280,7 +283,7 @@ int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
-        read_binary<Ibis::real>(temp, fs.gas.temp(cell_i));
+        read_binary<Ibis::real>(temp, Ibis::real_part(fs.gas.temp(cell_i)));
     }
 
     std::ifstream pressure(dir + "/p", std::ios::binary);
@@ -289,7 +292,7 @@ int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
-        read_binary<Ibis::real>(pressure, fs.gas.pressure(cell_i));
+        read_binary<Ibis::real>(pressure, Ibis::real_part(fs.gas.pressure(cell_i)));
     }
     pressure.close();
 
@@ -299,7 +302,7 @@ int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
-        read_binary<Ibis::real>(vx, fs.vel.x(cell_i));
+        read_binary<Ibis::real>(vx, Ibis::real_part(fs.vel.x(cell_i)));
     }
     vx.close();
 
@@ -309,7 +312,7 @@ int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
-        read_binary<Ibis::real>(vy, fs.vel.y(cell_i));
+        read_binary<Ibis::real>(vy, Ibis::real_part(fs.vel.y(cell_i)));
     }
     vy.close();
 
@@ -321,7 +324,7 @@ int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
         }
 
         for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
-            read_binary<Ibis::real>(vz, fs.vel.z(cell_i));
+            read_binary<Ibis::real>(vz, Ibis::real_part(fs.vel.z(cell_i)));
         }
         vz.close();
     }
@@ -335,3 +338,4 @@ int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
     return 0;
 }
 template class NativeBinaryInput<Ibis::real>;
+template class NativeBinaryInput<Ibis::dual>;
