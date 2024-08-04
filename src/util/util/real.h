@@ -62,7 +62,7 @@ KOKKOS_INLINE_FUNCTION real dual_part(const real& x) {
 }
 
 KOKKOS_INLINE_FUNCTION real dual_part(real& x) {
-    (void) x;
+    (void)x;
     return 0.0;
 }
 

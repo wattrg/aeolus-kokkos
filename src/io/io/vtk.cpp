@@ -76,7 +76,8 @@ void write_vector_field_ascii(std::ofstream& f,
 
     for (size_t i = 0; i < num_values; i++) {
         Vector3<T> vec = accessor->access(fs, fv, grid, gas_model, i);
-        f << Ibis::real_part(vec.x) << " " << Ibis::real_part(vec.y) << " " << Ibis::real_part(vec.z) << std::endl;
+        f << Ibis::real_part(vec.x) << " " << Ibis::real_part(vec.y) << " "
+          << Ibis::real_part(vec.z) << std::endl;
     }
 
     f << "</DataArray>" << std::endl;
@@ -92,7 +93,8 @@ void write_vector3s_ascii(std::ofstream& f,
     f << "format='ascii'>\n";
 
     for (size_t i = 0; i < num_values; i++) {
-        f << Ibis::real_part(vec.x(i)) << " " << Ibis::real_part(vec.y(i)) << " " << Ibis::real_part(vec.z(i)) << std::endl;
+        f << Ibis::real_part(vec.x(i)) << " " << Ibis::real_part(vec.y(i)) << " "
+          << Ibis::real_part(vec.z(i)) << std::endl;
     }
 
     f << "</DataArray>" << std::endl;

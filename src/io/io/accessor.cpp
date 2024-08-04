@@ -1,7 +1,6 @@
-#include <io/accessor.h>
-
 #include <finite_volume/gradient.h>
 #include <gas/transport_properties.h>
+#include <io/accessor.h>
 
 template <typename T>
 T PressureAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
