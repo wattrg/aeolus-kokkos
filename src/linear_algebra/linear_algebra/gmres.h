@@ -32,12 +32,11 @@ public:
 public:
     Gmres(){};
 
-    Gmres(std::unique_ptr<LinearSystem>& system, const size_t max_iters, Ibis::real tol);
+    Gmres(std::shared_ptr<LinearSystem> system, const size_t max_iters, Ibis::real tol);
 
-    Gmres(std::unique_ptr<LinearSystem>& system, json config);
+    Gmres(std::shared_ptr<LinearSystem> system, json config);
 
-    GmresResult solve(std::unique_ptr<LinearSystem>& system,
-                      Ibis::Vector<Ibis::real>& x0);
+    GmresResult solve(std::shared_ptr<LinearSystem> system, Ibis::Vector<Ibis::real>& x0);
 
 private:
     // configuration
@@ -66,7 +65,7 @@ public:  // this has to be public to access from inside kernels
     Ibis::Vector<Ibis::real, HostExecSpace> h_rotated_;
 
     // implementation
-    void compute_r0_(std::unique_ptr<LinearSystem>& system, Ibis::Vector<Ibis::real>& x0);
+    void compute_r0_(std::shared_ptr<LinearSystem> system, Ibis::Vector<Ibis::real>& x0);
     void apply_rotations_to_hessenberg_(size_t j);
 };
 

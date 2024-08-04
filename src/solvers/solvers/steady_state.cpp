@@ -4,19 +4,26 @@
 #include <gas/flow_state.h>
 #include <gas/transport_properties.h>
 #include <simulation/simulation.h>
-#include <solvers/steady_state.h>
 #include <solvers/cfl.h>
+#include <solvers/steady_state.h>
+#include <solvers/transient_linear_system.h>
 
-// SteadyStateLinearisation::SteadyStateLinearisation(const size_t n_cells,
-//                                                    const size_t n_cons,
-//                                                    const size_t dim) {
-//     n_cells_ = n_cells;
-//     n_cons_ = n_cons;
-//     dim_ = dim;
-//     n_vars_ = n_cells_ * n_cons_;
-//     residuals_ = ConservedQuantities<Ibis::dual>(n_cells_, dim_);
-//     fs_tmp_ = FlowStates<Ibis::dual>(n_cells_);
-// }
+SteadyStateLinearisation::SteadyStateLinearisation(std::shared_ptr<Sim<Ibis::dual>>& sim,
+                                                   ConservedQuantities<Ibis::dual> cq,
+                                                   FlowStates<Ibis::dual> fs) {
+    sim_ = sim;
+    cq_ = cq;
+    fs_ = fs;
+
+    n_cells_ = sim_->grid.num_total_cells();
+    n_cons_ = cq_.n_conserved();
+    n_vars_ = n_cells_ * n_cons_;
+    size_t dim = sim_->grid.dim();
+
+    rhs_ = Ibis::Vector<Ibis::real>{"SteadyStateLinearisation::rhs", n_vars_};
+    fs_tmp_ = FlowStates<Ibis::dual>{n_cells_};
+    cq_tmp_ = ConservedQuantities<Ibis::dual>{n_cells_, dim};
+}
 
 void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                                      Ibis::Vector<Ibis::real>& result) {
@@ -69,7 +76,6 @@ void SteadyStateLinearisation::eval_rhs() {
         });
 }
 
-
 SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string grid_dir,
                          std::string flow_dir)
     : Solver(grid_dir, flow_dir) {
@@ -81,8 +87,9 @@ SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string gr
     cq_ = ConservedQuantities<Ibis::dual>(n_cells, dim);
 
     // set up the linear system and non-linear solver
-    std::unique_ptr<LinearSystem> system =
-        std::unique_ptr<LinearSystem>(new SteadyStateLinearisation(sim_, cq_, fs_));
+    std::unique_ptr<PseudoTransientLinearSystem> system =
+        std::unique_ptr<PseudoTransientLinearSystem>(
+            new SteadyStateLinearisation(sim_, cq_, fs_));
     auto cfl = make_cfl_schedule(config.at("cfl"));
     jfnk_ = Jfnk(std::move(system), std::move(cfl), config);
 
@@ -96,10 +103,13 @@ SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string gr
     // io_ = FVIO<Ibis::real>(flow_format, flow_format, 1);
 }
 
-int SteadyState::initialise() { return 0; }
+int SteadyState::initialise() {
+    jfnk_.initialise();
+    return 0;
+}
 
 int SteadyState::take_step() {
-    jfnk_.step(cq_);
+    jfnk_.step(sim_, cq_, fs_);
     return 0;
 }
 
@@ -118,7 +128,8 @@ bool SteadyState::plot_this_step(unsigned int step) {
 
 int SteadyState::plot_solution(unsigned int step) {
     Ibis::real t = Ibis::real(step);
-    int result = io_.write(fs_, sim_->fv, sim_->grid, sim_->gas_model, sim_->trans_prop, t);
+    int result =
+        io_.write(fs_, sim_->fv, sim_->grid, sim_->gas_model, sim_->trans_prop, t);
     spdlog::info("  written flow solution: step {}", step);
     return result;
 }

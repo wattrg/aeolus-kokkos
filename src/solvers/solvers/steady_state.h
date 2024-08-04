@@ -9,8 +9,9 @@
 #include <solvers/cfl.h>
 #include <solvers/jfnk.h>
 #include <solvers/solver.h>
+#include <solvers/transient_linear_system.h>
 
-class SteadyStateLinearisation : public LinearSystem {
+class SteadyStateLinearisation : public PseudoTransientLinearSystem {
 public:
     // Construction / destruction
     SteadyStateLinearisation(std::shared_ptr<Sim<Ibis::dual>>& sim,
@@ -48,9 +49,13 @@ private:
     size_t n_cells_;
     size_t n_cons_;
     size_t n_vars_;
-    size_t dim_;
-    ConservedQuantities<Ibis::dual> cq_;  // the current solution (not owned)
-    FlowStates<Ibis::dual> fs_;           // the current solution (not owned)
+    // size_t dim_;
+
+    // the point to linearise the system of equations around
+    // these are not owned by the linearisation, so the memory
+    // isn't allocated by this class
+    ConservedQuantities<Ibis::dual> cq_;
+    FlowStates<Ibis::dual> fs_;
 
     Ibis::Vector<Ibis::real> rhs_;  // the rhs of the system of equations
 
@@ -61,7 +66,6 @@ private:
     // the simulation
     std::shared_ptr<Sim<Ibis::dual>> sim_;
 };
-
 
 class SteadyState : public Solver {
 public:

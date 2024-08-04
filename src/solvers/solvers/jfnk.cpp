@@ -2,18 +2,25 @@
 
 #include "finite_volume/conserved_quantities.h"
 
-Jfnk::Jfnk(std::unique_ptr<LinearSystem>&& system, std::unique_ptr<CflSchedule>&& cfl,
-           json config) {
+Jfnk::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
+           std::unique_ptr<CflSchedule>&& cfl, json config) {
     max_steps_ = config.at("max_steps");
     gmres_ = Gmres(system, config.at("gmres"));
     cfl_ = std::move(cfl);
-    system_ = std::move(system);
+    system_ = system;
 }
 
-void Jfnk::step(ConservedQuantities<Ibis::dual>& cq) {
+int Jfnk::initialise() { return 0; }
+
+void Jfnk::step(std::shared_ptr<Sim<Ibis::dual>>& sim,
+                ConservedQuantities<Ibis::dual>& cq, FlowStates<Ibis::dual>& fs) {
     // dU is the change in the solution for the step,
     // our initial guess for it is zero
     dU_.zero();
+    Ibis::real cfl = cfl_->eval(0.0);
+    Ibis::real stable_dt =
+        sim->fv.estimate_dt(fs, sim->grid, sim->gas_model, sim->trans_prop);
+    system_->set_pseudo_time_step(cfl * stable_dt);
     gmres_.solve(system_, dU_);
     apply_update_(cq);
 }

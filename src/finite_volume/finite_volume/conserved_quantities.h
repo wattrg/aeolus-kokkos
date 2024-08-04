@@ -64,7 +64,7 @@ public:
     KOKKOS_INLINE_FUNCTION
     T& energy() { return energy_; }
 
-    void write_to_file(std::ofstream& f, Ibis::real time, unsigned int step);
+    void write_to_file(std::ofstream& f, Ibis::real time, size_t step);
 
 private:
     T mass_;
@@ -89,13 +89,13 @@ class ConservedQuantities {
 public:
     ConservedQuantities() {}
 
-    ConservedQuantities(unsigned int n, unsigned int dim);
+    ConservedQuantities(size_t n, size_t dim);
 
     KOKKOS_INLINE_FUNCTION
-    unsigned int size() const { return cq_.extent(0); }
+    size_t size() const { return cq_.extent(0); }
 
     KOKKOS_INLINE_FUNCTION
-    unsigned int n_conserved() const { return cq_.extent(1); }
+    size_t n_conserved() const { return cq_.extent(1); }
 
     KOKKOS_INLINE_FUNCTION
     int dim() const { return dim_; }

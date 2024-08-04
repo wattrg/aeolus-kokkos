@@ -3,7 +3,7 @@
 
 template <typename T>
 void ConservedQuantitiesNorm<T>::write_to_file(std::ofstream& f, Ibis::real time,
-                                               unsigned int step) {
+                                               size_t step) {
     f << time << " " << step << " " << Ibis::real_part(mass()) << " "
       << Ibis::real_part(momentum_x()) << " " << Ibis::real_part(momentum_y()) << " "
       << Ibis::real_part(momentum_z()) << " " << Ibis::real_part(energy()) << std::endl;
@@ -12,7 +12,7 @@ template class ConservedQuantitiesNorm<Ibis::real>;
 template class ConservedQuantitiesNorm<Ibis::dual>;
 
 template <typename T>
-ConservedQuantities<T>::ConservedQuantities(unsigned int n, unsigned int dim)
+ConservedQuantities<T>::ConservedQuantities(size_t n, size_t dim)
     : cq_(Kokkos::View<T**>("ConservedQuantities", n, dim + 2)),
       num_values_(n),
       dim_(dim) {
@@ -25,7 +25,7 @@ template <typename T>
 void ConservedQuantities<T>::apply_time_derivative(const ConservedQuantities<T>& dudt,
                                                    Ibis::real dt) {
     Kokkos::parallel_for(
-        "CQ::update_cq", num_values_, KOKKOS_CLASS_LAMBDA(const int i) {
+        "CQ::update_cq", num_values_, KOKKOS_CLASS_LAMBDA(const size_t i) {
             mass(i) += dudt.mass(i) * dt;
             momentum_x(i) += dudt.momentum_x(i) * dt;
             momentum_y(i) += dudt.momentum_y(i) * dt;
@@ -41,7 +41,7 @@ ConservedQuantitiesNorm<T> ConservedQuantities<T>::L2_norms() const {
     ConservedQuantitiesNorm<T> norms{};
     Kokkos::parallel_reduce(
         "L2_norm", num_values_,
-        KOKKOS_CLASS_LAMBDA(const int i, ConservedQuantitiesNorm<T>& tl_cq) {
+        KOKKOS_CLASS_LAMBDA(const size_t i, ConservedQuantitiesNorm<T>& tl_cq) {
             tl_cq.mass() += mass(i) * mass(i);
             tl_cq.momentum_x() += momentum_x(i) * momentum_x(i);
             tl_cq.momentum_y() += momentum_y(i) * momentum_y(i);
@@ -74,7 +74,7 @@ void apply_time_derivative(const ConservedQuantities<T>& U0, ConservedQuantities
     size_t n_values = U0.size();
     size_t dim = U0.dim();
     Kokkos::parallel_for(
-        "apply_time_derivative", n_values, KOKKOS_LAMBDA(const int i) {
+        "apply_time_derivative", n_values, KOKKOS_LAMBDA(const size_t i) {
             U1.mass(i) = U0.mass(i) + dUdt.mass(i) * dt;
             U1.momentum_x(i) = U0.momentum_x(i) + dUdt.momentum_x(i) * dt;
             U1.momentum_y(i) = U0.momentum_y(i) + dUdt.momentum_y(i) * dt;

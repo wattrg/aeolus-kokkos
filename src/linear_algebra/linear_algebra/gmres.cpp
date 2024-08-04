@@ -7,7 +7,7 @@ GmresResult::GmresResult(bool success_, size_t n_iters_, Ibis::real tol_,
                          Ibis::real residual_)
     : success(success_), n_iters(n_iters_), tol(tol_), residual(residual_) {}
 
-Gmres::Gmres(std::unique_ptr<LinearSystem>& system, const size_t max_iters,
+Gmres::Gmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
              Ibis::real tol) {
     tol_ = tol;
     max_iters_ = max_iters;
@@ -39,10 +39,10 @@ Gmres::Gmres(std::unique_ptr<LinearSystem>& system, const size_t max_iters,
     v_ = Ibis::Vector<Ibis::real>("Gmres::v", num_vars_);
 }
 
-Gmres::Gmres(std::unique_ptr<LinearSystem>& system, json config)
+Gmres::Gmres(std::shared_ptr<LinearSystem> system, json config)
     : Gmres(system, config.at("max_iters"), config.at("tolerance")) {}
 
-GmresResult Gmres::solve(std::unique_ptr<LinearSystem>& system,
+GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
                          Ibis::Vector<Ibis::real>& x0) {
     // initialise the intial residuals and first krylov vector
     compute_r0_(system, x0);
@@ -146,7 +146,7 @@ void Gmres::apply_rotations_to_hessenberg_(size_t j) {
     H.deep_copy(H_new);
 }
 
-void Gmres::compute_r0_(std::unique_ptr<LinearSystem>& system,
+void Gmres::compute_r0_(std::shared_ptr<LinearSystem> system,
                         Ibis::Vector<Ibis::real>& x0) {
     system->matrix_vector_product(x0, w_);
 
@@ -217,7 +217,7 @@ TEST_CASE("GMRES") {
         Ibis::Vector<Ibis::real, ExecSpace> rhs_;
     };
 
-    std::unique_ptr<LinearSystem> sys{new TestLinearSystem()};
+    std::shared_ptr<LinearSystem> sys{new TestLinearSystem()};
 
     Gmres solver{sys, 5, 1e-10};
     Ibis::Vector<Ibis::real> x{"x", 5};

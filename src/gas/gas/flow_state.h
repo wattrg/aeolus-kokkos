@@ -47,7 +47,7 @@ public:
 public:
     FlowStates() {}
 
-    FlowStates(int n)
+    FlowStates(size_t n)
         : gas(GasStates<T, Layout, Space>(n)), vel(Vector3s<T, Layout, Space>(n)) {}
 
     FlowStates(GasStates<T, Layout, Space> gas, Vector3s<T, Layout, Space> vel)

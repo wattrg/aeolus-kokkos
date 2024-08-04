@@ -8,6 +8,7 @@
 #include <linear_algebra/gmres.h>
 #include <linear_algebra/linear_system.h>
 #include <solvers/cfl.h>
+#include <solvers/transient_linear_system.h>
 #include <util/numeric_types.h>
 
 #include <memory>
@@ -19,12 +20,15 @@ class Jfnk {
 public:
     Jfnk() {}
 
-    Jfnk(std::unique_ptr<LinearSystem>&& system, std::unique_ptr<CflSchedule>&&,
-         json config);
+    Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
+         std::unique_ptr<CflSchedule>&&, json config);
 
-    void step(ConservedQuantities<Ibis::dual>& cq);
+    int initialise();
 
-    void solve(Sim<Ibis::dual>& sim);
+    void step(std::shared_ptr<Sim<Ibis::dual>>& sim, ConservedQuantities<Ibis::dual>& cq,
+              FlowStates<Ibis::dual>& fs);
+
+    void solve(std::shared_ptr<Sim<Ibis::dual>>& sim);
 
     size_t max_steps() const { return max_steps_; }
 
@@ -35,7 +39,7 @@ public:
     Ibis::real target_residual() const;
 
 private:
-    std::unique_ptr<LinearSystem> system_;
+    std::shared_ptr<PseudoTransientLinearSystem> system_;
     std::unique_ptr<CflSchedule> cfl_;
     Gmres gmres_;
     Ibis::Vector<Ibis::real> dU_;
