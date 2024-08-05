@@ -44,7 +44,7 @@ public:
     // comparison operators
     KOKKOS_INLINE_FUNCTION
     friend bool operator<(const Dual<T>& lhs, const Dual<T>& rhs) {
-        return lhs.real_ > rhs.real_;
+        return lhs.real_ < rhs.real_;
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -114,7 +114,7 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     friend Dual<T> operator-(const T& lhs, const Dual<T>& rhs) {
-        return Dual<T>{lhs - rhs.real_, rhs.dual_};
+        return Dual<T>{lhs - rhs.real_, -rhs.dual_};
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -170,7 +170,7 @@ public:
     friend Dual<T> operator/(const Dual<T>& num, const Dual<T>& den) {
         return Dual<T>{
             num.real_ / den.real_,
-            (num.real_ * den.dual_ - num.dual_ * den.real_) / (den.real_ * den.real_)};
+            (num.dual_ * den.real_ - num.real_ * den.dual_) / (den.real_ * den.real_)};
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -186,7 +186,7 @@ public:
     KOKKOS_INLINE_FUNCTION
     Dual<T>& operator/=(const Dual<T>& other) {
         this->real_ /= other.real_;
-        this->dual_ = this->real_ * other->dual_ - this->dual_ * other.real_;
+        this->dual_ = (this->dual_ * other->real_ - this->real_ * other.dual_) / (other.dual_ * other.dual_);
         return *this;
     }
 
@@ -211,7 +211,9 @@ public:
     T& dual() { return this->dual_; }
 
     KOKKOS_INLINE_FUNCTION
-    T abs() const { return Kokkos::sqrt(this->real_ * this->real_ + dual_ * dual_); }
+    T abs() const { 
+        return Kokkos::abs(real_);
+    }
 
     KOKKOS_INLINE_FUNCTION
     Dual<T> conjugate() const { return Dual<T>{this->real_, -this->dual_}; }
@@ -231,8 +233,7 @@ KOKKOS_INLINE_FUNCTION Dual<T> sqrt(const Dual<T>& d) {
 
 template <typename T>
 KOKKOS_INLINE_FUNCTION Dual<T> abs(const Dual<T>& d) {
-    return Kokkos::abs(d.real());
-    // return Kokkos::sqrt(d.real() * d.real() + d.dual() * d.dual());
+    return d.abs();
 }
 
 template <typename T>
@@ -248,10 +249,12 @@ template <typename T>
 KOKKOS_INLINE_FUNCTION Dual<T> max(const Dual<T>& d1, const Dual<T>& d2) {
     return d1.real() > d2.real() ? d1 : d2;
 }
+
 template <typename T>
 KOKKOS_INLINE_FUNCTION Dual<T> max(const T& d1, const Dual<T>& d2) {
     return d1 > d2.real() ? d1 : d2;
 }
+
 template <typename T>
 KOKKOS_INLINE_FUNCTION Dual<T> max(const Dual<T>& d1, const T& d2) {
     return d1.real() > d2 ? d1 : d2;
@@ -285,7 +288,7 @@ KOKKOS_INLINE_FUNCTION Dual<T> ceil(const Dual<T>& d) {
 template <typename T>
 KOKKOS_INLINE_FUNCTION Dual<T> copysign(const Dual<T>& mag, const Dual<T>& sign) {
     T real = Kokkos::copysign(mag.real(), sign.real());
-    T dual = real == mag.real() ? mag.dual() : -mag.dual();
+    T dual = (real - mag.real()) < 1e-15 ? mag.dual() : -mag.dual();
     return Dual<T>{real, dual};
 }
 

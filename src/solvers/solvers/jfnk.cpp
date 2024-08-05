@@ -31,7 +31,7 @@ void Jfnk::apply_update_(std::shared_ptr<Sim<Ibis::dual>>& sim,
                          ConservedQuantities<Ibis::dual>& cq,
                          FlowStates<Ibis::dual>& fs) {
     auto dU = dU_;
-    size_t n_cells = cq.size();
+    size_t n_cells = sim->grid.num_cells();
     size_t n_cons = cq.n_conserved();
     Kokkos::parallel_for(
         "Jfnk::apply_update", n_cells, KOKKOS_LAMBDA(const size_t cell_i) {
