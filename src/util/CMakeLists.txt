@@ -16,6 +16,7 @@ if (Ibis_BUILD_TESTS)
     	  util/vector3.cpp 
     	  util/ragged_array.cpp
     	  util/cubic_spline.cpp
+    	  util/dual.cpp
     )
 
     target_link_libraries(
