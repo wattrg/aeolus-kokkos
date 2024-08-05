@@ -8,22 +8,24 @@
 #include <solvers/steady_state.h>
 #include <solvers/transient_linear_system.h>
 
-SteadyStateLinearisation::SteadyStateLinearisation(std::shared_ptr<Sim<Ibis::dual>>& sim,
-                                                   ConservedQuantities<Ibis::dual> cq,
-                                                   FlowStates<Ibis::dual> fs) {
+SteadyStateLinearisation::SteadyStateLinearisation(
+    std::shared_ptr<Sim<Ibis::dual>> sim,
+    std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
+    std::shared_ptr<FlowStates<Ibis::dual>> fs) {
     sim_ = sim;
     cq_ = cq;
     fs_ = fs;
 
-    n_cells_ = sim_->grid.num_total_cells();
-    n_cons_ = cq_.n_conserved();
+    n_total_cells_ = sim_->grid.num_total_cells();
+    n_cells_ = sim_->grid.num_cells();
+    n_cons_ = cq_->n_conserved();
     n_vars_ = n_cells_ * n_cons_;
     size_t dim = sim_->grid.dim();
 
     rhs_ = Ibis::Vector<Ibis::real>{"SteadyStateLinearisation::rhs", n_vars_};
-    fs_tmp_ = FlowStates<Ibis::dual>{n_cells_};
-    cq_tmp_ = ConservedQuantities<Ibis::dual>{n_cells_, dim};
-    residuals_ = ConservedQuantities<Ibis::dual>{n_cells_, dim};
+    fs_tmp_ = FlowStates<Ibis::dual>{n_total_cells_};
+    cq_tmp_ = ConservedQuantities<Ibis::dual>{n_total_cells_, dim};
+    residuals_ = ConservedQuantities<Ibis::dual>{n_total_cells_, dim};
 }
 
 void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
@@ -33,7 +35,7 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
     auto residuals = residuals_;
     Ibis::real dt_star = dt_star_;
     auto cq_tmp = cq_tmp_;
-    auto cq = cq_;
+    auto cq = *cq_;
     Kokkos::parallel_for(
         "SteadyStateLinearisation::set_dual", n_cells_, KOKKOS_LAMBDA(const int cell_i) {
             const int vector_idx = cell_i * n_cons;
@@ -63,7 +65,8 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
 }
 
 void SteadyStateLinearisation::eval_rhs() {
-    sim_->fv.compute_dudt(fs_, sim_->grid, residuals_, sim_->gas_model, sim_->trans_prop);
+    sim_->fv.compute_dudt(*fs_, sim_->grid, residuals_, sim_->gas_model,
+                          sim_->trans_prop);
 
     size_t n_cons = n_cons_;
     auto rhs = rhs_;
@@ -87,10 +90,15 @@ SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string gr
     json solver_config = config.at("solver");
     sim_ = std::shared_ptr<Sim<Ibis::dual>>{new Sim<Ibis::dual>(grid, config)};
 
-    size_t n_cells = sim_->grid.num_total_cells();
+    size_t n_total_cells = sim_->grid.num_total_cells();
+    // size_t n_cells = sim_->grid.num_cells();
     size_t dim = sim_->grid.dim();
-    fs_ = FlowStates<Ibis::dual>(n_cells);
-    cq_ = ConservedQuantities<Ibis::dual>(n_cells, dim);
+
+    fs_ = std::shared_ptr<FlowStates<Ibis::dual>>{
+        new FlowStates<Ibis::dual>(n_total_cells)};
+
+    cq_ = std::shared_ptr<ConservedQuantities<Ibis::dual>>{
+        new ConservedQuantities<Ibis::dual>(n_total_cells, dim)};
 
     // set up the linear system and non-linear solver
     std::unique_ptr<PseudoTransientLinearSystem> system =
@@ -109,12 +117,21 @@ SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string gr
     io_ = FVIO<Ibis::dual>(flow_format, flow_format, 1);
 }
 
-int SteadyState::initialise() { return jfnk_.initialise(); }
+int SteadyState::initialise() {
+    // read the initial conditions
+    json meta_data{};
+    int ic_result =
+        io_.read(*fs_, sim_->grid, sim_->gas_model, sim_->trans_prop, meta_data, 0);
+    int conversion_result = primatives_to_conserved(*cq_, *fs_, sim_->gas_model);
+
+    int jfnk_init = jfnk_.initialise();
+    return ic_result + conversion_result + jfnk_init;
+}
 
 int SteadyState::finalise() { return 0; }
 
 int SteadyState::take_step() {
-    jfnk_.step(sim_, cq_, fs_);
+    jfnk_.step(sim_, *cq_, *fs_);
     return 0;
 }
 
@@ -132,9 +149,9 @@ bool SteadyState::plot_this_step(unsigned int step) {
 }
 
 int SteadyState::plot_solution(unsigned int step) {
-    Ibis::real t = Ibis::real(step);
+    Ibis::real t = (Ibis::real)step;
     int result =
-        io_.write(fs_, sim_->fv, sim_->grid, sim_->gas_model, sim_->trans_prop, t);
+        io_.write(*fs_, sim_->fv, sim_->grid, sim_->gas_model, sim_->trans_prop, t);
     spdlog::info("  written flow solution: step {}", step);
     return result;
 }

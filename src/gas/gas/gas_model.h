@@ -25,6 +25,7 @@ KOKKOS_INLINE_FUNCTION T p_from_rhoT(T rho, T temp, T R) {
 
 template <typename T>
 KOKKOS_INLINE_FUNCTION T speed_of_sound_(T temp, T R, T gamma) {
+    // assert(Ibis::real_part(temp) > 0.0);
     return Ibis::sqrt(gamma * R * temp);
 }
 

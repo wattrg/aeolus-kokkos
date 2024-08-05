@@ -188,7 +188,7 @@ T norm2(const Vector<T, ExecSpace, Layout, MemSpace>& vec) {
 
 template <typename T, class ExecSpace, class Layout, class MemSpace>
 T norm2_squared(const Vector<T, ExecSpace, Layout, MemSpace>& vec) {
-    T norm2;
+    T norm2 = T(0.0);
     Kokkos::parallel_reduce(
         "Vector::norm2", Kokkos::RangePolicy<ExecSpace>(0, vec.size()),
         KOKKOS_LAMBDA(const size_t i, T& utd) {

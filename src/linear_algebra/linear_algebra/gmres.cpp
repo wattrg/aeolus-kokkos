@@ -10,8 +10,8 @@ GmresResult::GmresResult(bool success_, size_t n_iters_, Ibis::real tol_,
 Gmres::Gmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
              Ibis::real tol) {
     tol_ = tol;
-    max_iters_ = max_iters;
     num_vars_ = system->num_vars();
+    max_iters_ = Kokkos::min(num_vars_, max_iters);
 
     // least squares problem
     H0_ =
@@ -87,14 +87,13 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
     auto H = H0_.sub_matrix(0, n_vectors, 0, n_vectors);
     auto V = krylov_vectors_.columns(0, n_vectors);
     auto g = g0_.sub_vector(0, n_vectors);
-    auto w = w_;
     auto ym_host = ym_host_.sub_vector(0, n_vectors);
     auto ym = ym_.sub_vector(0, n_vectors);
 
     // return the guess, even if we didn't converge
     Ibis::upper_triangular_solve(H, ym_host, g);
     ym.deep_copy_space(ym_host);
-    Ibis::gemv(V, ym, w);
+    Ibis::gemv(V, ym, w_);
     Ibis::add_scaled_vector(x0, w_, 1.0);
 
     return result;

@@ -104,7 +104,7 @@ public:
     // subtraction operators
     KOKKOS_INLINE_FUNCTION
     friend Dual<T> operator-(const Dual<T>& lhs, const Dual<T>& rhs) {
-        return Dual<T>{rhs.real_ - lhs.real_, rhs.dual_ - rhs.dual_};
+        return Dual<T>{lhs.real_ - rhs.real_, lhs.dual_ - rhs.dual_};
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -231,7 +231,8 @@ KOKKOS_INLINE_FUNCTION Dual<T> sqrt(const Dual<T>& d) {
 
 template <typename T>
 KOKKOS_INLINE_FUNCTION Dual<T> abs(const Dual<T>& d) {
-    return Kokkos::sqrt(d.real() * d.real() + d.dual() * d.dual());
+    return Kokkos::abs(d.real());
+    // return Kokkos::sqrt(d.real() * d.real() + d.dual() * d.dual());
 }
 
 template <typename T>

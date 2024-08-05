@@ -14,9 +14,9 @@
 class SteadyStateLinearisation : public PseudoTransientLinearSystem {
 public:
     // Construction / destruction
-    SteadyStateLinearisation(std::shared_ptr<Sim<Ibis::dual>>& sim,
-                             ConservedQuantities<Ibis::dual> cq,
-                             FlowStates<Ibis::dual> fs);
+    SteadyStateLinearisation(std::shared_ptr<Sim<Ibis::dual>> sim,
+                             std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
+                             std::shared_ptr<FlowStates<Ibis::dual>> fs);
 
     ~SteadyStateLinearisation() {}
 
@@ -46,7 +46,8 @@ private:
     Ibis::real dt_star_;
 
     // memory
-    size_t n_cells_;
+    size_t n_cells_;        // excluding ghost cells
+    size_t n_total_cells_;  // including ghost cells
     size_t n_cons_;
     size_t n_vars_;
     // size_t dim_;
@@ -54,8 +55,8 @@ private:
     // the point to linearise the system of equations around
     // these are not owned by the linearisation, so the memory
     // isn't allocated by this class
-    ConservedQuantities<Ibis::dual> cq_;
-    FlowStates<Ibis::dual> fs_;
+    std::shared_ptr<ConservedQuantities<Ibis::dual>> cq_;
+    std::shared_ptr<FlowStates<Ibis::dual>> fs_;
 
     Ibis::Vector<Ibis::real> rhs_;  // the rhs of the system of equations
 
@@ -103,10 +104,13 @@ private:
     void print_progress(unsigned int step, Ibis::real wc);
     std::string stop_reason(unsigned int step);
     bool stop_now(unsigned int step);
+
     size_t max_step() const { return jfnk_.max_steps(); }
+
     int count_bad_cells() {
-        return sim_->fv.count_bad_cells(fs_, sim_->grid.num_cells());
+        return sim_->fv.count_bad_cells(*fs_, sim_->grid.num_cells());
     }
+
     bool write_residuals(unsigned int step) {
         (void)step;
         return true;
@@ -114,8 +118,8 @@ private:
 
 private:
     // memory
-    ConservedQuantities<Ibis::dual> cq_;
-    FlowStates<Ibis::dual> fs_;
+    std::shared_ptr<ConservedQuantities<Ibis::dual>> cq_;
+    std::shared_ptr<FlowStates<Ibis::dual>> fs_;
 
     // the core simulation
     std::shared_ptr<Sim<Ibis::dual>> sim_;

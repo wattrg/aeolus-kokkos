@@ -22,6 +22,7 @@ void Jfnk::step(std::shared_ptr<Sim<Ibis::dual>>& sim,
     Ibis::real cfl = cfl_->eval(0.0);
     stable_dt_ = sim->fv.estimate_dt(fs, sim->grid, sim->gas_model, sim->trans_prop);
     system_->set_pseudo_time_step(cfl * stable_dt_);
+    system_->eval_rhs();
     gmres_.solve(system_, dU_);
     apply_update_(sim, cq, fs);
 }

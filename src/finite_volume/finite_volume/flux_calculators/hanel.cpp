@@ -8,7 +8,7 @@ template <typename T>
 void Hanel<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& right,
                             ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d) {
     Kokkos::parallel_for(
-        "Flux::hanel", flux.size(), KOKKOS_LAMBDA(const int i) {
+        "Flux::hanel", flux.size(), KOKKOS_LAMBDA(const size_t i) {
             // unpack left gas state
             T rL = left.gas.rho(i);
             T pL = left.gas.pressure(i);

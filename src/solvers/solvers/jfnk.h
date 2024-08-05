@@ -34,9 +34,9 @@ public:
 
     Ibis::real pseudo_time_step_size() const { return stable_dt_; };
 
-    Ibis::real global_residual() const { return -1.0; };
+    Ibis::real global_residual() const { return std::numeric_limits<Ibis::real>::max(); };
 
-    Ibis::real target_residual() const { return -1.0; };
+    Ibis::real target_residual() const { return tolerance_; };
 
 private:
     std::shared_ptr<PseudoTransientLinearSystem> system_;
