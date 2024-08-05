@@ -6,7 +6,7 @@
 
 template <typename T>
 Sim<T>::Sim(GridBlock<T> grid_, json config) : grid(grid_) {
-    fv = FiniteVolume<T>(grid_, config.at("finite_volume"));
+    fv = FiniteVolume<T>(grid_, config);
     gas_model = IdealGas<T>(config.at("gas_model"));
     trans_prop = TransportProperties<T>(config.at("transport_properties"));
 }

@@ -31,7 +31,7 @@ public:
 
     Vertices(vector_type positions) : _positions(positions) {}
 
-    void set_vertex_position(size_t vertex_id, Vector3<T> pos) {
+    void set_vertex_position(size_t vertex_id, Vector3<Ibis::real> pos) {
         _positions(vertex_id, 0) = pos.x;
         _positions(vertex_id, 1) = pos.y;
         _positions(vertex_id, 2) = pos.z;

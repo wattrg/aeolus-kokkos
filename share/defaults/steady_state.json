@@ -1,0 +1,8 @@
+{
+  "cfl": 0.5,
+  "max_steps": 1000,
+  "print_frequency": 10,
+  "plot_frequency": 10,
+  "diagnostics_frequency": 1,
+  "tolerance": 1e-5
+}

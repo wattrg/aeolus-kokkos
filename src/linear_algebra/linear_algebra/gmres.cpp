@@ -40,7 +40,7 @@ Gmres::Gmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
 }
 
 Gmres::Gmres(std::shared_ptr<LinearSystem> system, json config)
-    : Gmres(system, config.at("max_iters"), config.at("tolerance")) {}
+    : Gmres(system, config.at("max_iters"), config.at("tol")) {}
 
 GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
                          Ibis::Vector<Ibis::real>& x0) {

@@ -32,11 +32,11 @@ public:
 
     size_t max_steps() const { return max_steps_; }
 
-    Ibis::real pseudo_time_step_size() const;
+    Ibis::real pseudo_time_step_size() const { return stable_dt_; };
 
-    Ibis::real global_residual() const;
+    Ibis::real global_residual() const { return -1.0; };
 
-    Ibis::real target_residual() const;
+    Ibis::real target_residual() const { return -1.0; };
 
 private:
     std::shared_ptr<PseudoTransientLinearSystem> system_;
@@ -45,11 +45,13 @@ private:
     Ibis::Vector<Ibis::real> dU_;
 
     size_t max_steps_;
-    Ibis::real target_residual_;
+    Ibis::real tolerance_;
     Ibis::real global_residual_;
+    Ibis::real stable_dt_;
 
 public:  // this is public to appease NVCC
-    void apply_update_(ConservedQuantities<Ibis::dual>& cq);
+    void apply_update_(std::shared_ptr<Sim<Ibis::dual>>& sim,
+                       ConservedQuantities<Ibis::dual>& cq, FlowStates<Ibis::dual>& fs);
 };
 
 #endif

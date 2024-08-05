@@ -8,6 +8,8 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 
+#include "solvers/steady_state.h"
+
 using json = nlohmann::json;
 
 Solver::Solver(std::string grid_dir, std::string flow_dir)
@@ -70,6 +72,13 @@ std::unique_ptr<Solver> make_solver(json config, std::string grid_dir,
         GridBlock<Ibis::real> grid(grid_file, grid_config);
         return std::unique_ptr<Solver>(
             new RungeKutta(config, std::move(grid), grid_dir, flow_dir));
+    } else if (solver_name == "steady_state") {
+        GridBlock<Ibis::dual> grid(grid_file, grid_config);
+        return std::unique_ptr<Solver>(
+            new SteadyState(config, std::move(grid), grid_dir, flow_dir));
+    } else {
+        spdlog::error("Unknown solver {}", solver_name);
+        throw new std::runtime_error("Unknown solver");
     }
     return NULL;
 }

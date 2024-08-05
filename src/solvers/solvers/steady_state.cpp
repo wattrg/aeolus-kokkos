@@ -23,6 +23,7 @@ SteadyStateLinearisation::SteadyStateLinearisation(std::shared_ptr<Sim<Ibis::dua
     rhs_ = Ibis::Vector<Ibis::real>{"SteadyStateLinearisation::rhs", n_vars_};
     fs_tmp_ = FlowStates<Ibis::dual>{n_cells_};
     cq_tmp_ = ConservedQuantities<Ibis::dual>{n_cells_, dim};
+    residuals_ = ConservedQuantities<Ibis::dual>{n_cells_, dim};
 }
 
 void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
@@ -76,9 +77,14 @@ void SteadyStateLinearisation::eval_rhs() {
         });
 }
 
+void SteadyStateLinearisation::set_pseudo_time_step(Ibis::real dt_star) {
+    dt_star_ = dt_star;
+}
+
 SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string grid_dir,
                          std::string flow_dir)
     : Solver(grid_dir, flow_dir) {
+    json solver_config = config.at("solver");
     sim_ = std::shared_ptr<Sim<Ibis::dual>>{new Sim<Ibis::dual>(grid, config)};
 
     size_t n_cells = sim_->grid.num_total_cells();
@@ -90,23 +96,22 @@ SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string gr
     std::unique_ptr<PseudoTransientLinearSystem> system =
         std::unique_ptr<PseudoTransientLinearSystem>(
             new SteadyStateLinearisation(sim_, cq_, fs_));
-    auto cfl = make_cfl_schedule(config.at("cfl"));
-    jfnk_ = Jfnk(std::move(system), std::move(cfl), config);
+    auto cfl = make_cfl_schedule(solver_config.at("cfl"));
+    jfnk_ = Jfnk(std::move(system), std::move(cfl), solver_config);
 
     // configuration
-    print_frequency_ = config.at("print_frequency");
-    plot_frequency_ = config.at("plot_frequency");
-    diagnostics_frequency_ = config.at("diagnostics_frequency");
+    print_frequency_ = solver_config.at("print_frequency");
+    plot_frequency_ = solver_config.at("plot_frequency");
+    diagnostics_frequency_ = solver_config.at("diagnostics_frequency");
 
     // I/O
     FlowFormat flow_format = string_to_flow_format((config.at("io").at("flow_format")));
-    // io_ = FVIO<Ibis::real>(flow_format, flow_format, 1);
+    io_ = FVIO<Ibis::dual>(flow_format, flow_format, 1);
 }
 
-int SteadyState::initialise() {
-    jfnk_.initialise();
-    return 0;
-}
+int SteadyState::initialise() { return jfnk_.initialise(); }
+
+int SteadyState::finalise() { return 0; }
 
 int SteadyState::take_step() {
     jfnk_.step(sim_, cq_, fs_);

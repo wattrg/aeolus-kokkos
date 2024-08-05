@@ -86,8 +86,8 @@ private:
     unsigned int diagnostics_frequency_;
 
     // progress
-    Ibis::real stable_dt_;
-    Ibis::real dt_star_;
+    // Ibis::real stable_dt_;
+    // Ibis::real dt_star_;
 
     // input/output
     FVIO<Ibis::dual> io_;
@@ -106,6 +106,10 @@ private:
     size_t max_step() const { return jfnk_.max_steps(); }
     int count_bad_cells() {
         return sim_->fv.count_bad_cells(fs_, sim_->grid.num_cells());
+    }
+    bool write_residuals(unsigned int step) {
+        (void)step;
+        return true;
     }
 
 private:

@@ -30,12 +30,14 @@ class ValidationException(Exception):
 
 class Solver(Enum):
     RungeKutta = "runge_kutta"
-
+    SteadyState = "steady_state"
 
 
 def string_to_solver(string):
     if string == Solver.RungeKutta.value:
         return Solver.RungeKutta
+    elif string == Solver.SteadyState.value:
+        return Solver.SteadyState
     validation_errors.append(ValidationException(f"Unknown solver {string}"))
 
 
@@ -629,12 +631,69 @@ class RungeKutta:
         return
 
 
+class Gmres:
+    _json_values = ["max_iters", "tol"]
+    __slots__ = _json_values
+    _defaults_file = "gmres.json"
+
+    def __init__(self, **kwargs):
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
+
+        for key in json_data:
+            setattr(self, key, json_data[key])
+
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+
+    def as_dict(self):
+        dictionary = {}
+        for key in self._json_values:
+            dictionary[key] = getattr(self, key)
+        return dictionary
+
+    def validate(self):
+        return
+
+
+class SteadyState:
+    _json_values = ["cfl", "max_steps", "print_frequency", "plot_frequency",
+                    "diagnostics_frequency", "tolerance"]
+    _defaults_file = "steady_state.json"
+    _name = Solver.SteadyState.value
+    __slots__ = _json_values + ["linear_solver", "cfl"]
+
+    def __init__(self, **kwargs):
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
+
+        for key in json_data:
+            setattr(self, key, json_data[key])
+
+        self.linear_solver = Gmres()
+
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+
+    def as_dict(self):
+        dictionary = {"name": self._name}
+        for key in self._json_values:
+            if key == "cfl" and type(self.cfl) is not CflSchedule:
+                self.cfl = make_cfl_schedule(self.cfl).as_dict()
+            dictionary[key] = getattr(self, key)
+        dictionary["linear_solver"] = self.linear_solver.as_dict()
+        return dictionary
+
+    def validate(self):
+        return
+
+
 def make_default_solver():
     default_solver_name = read_defaults(DEFAULTS_DIRECTORY,
                                         "config.json")["solver"]
     default_solver = string_to_solver(default_solver_name)
     if default_solver == Solver.RungeKutta:
         return RungeKutta()
+    elif default_solver == Solver.SteadyState:
+        return SteadyState()
     validation_errors.append(
         ValidationException(f"Unknown default solver {default_solver_name}")
     )
@@ -849,6 +908,8 @@ def main(file_name, res_dir):
         "GasModel": GasModel,
         "IdealGas": IdealGas,
         "RungeKutta": RungeKutta,
+        "SteadyState": SteadyState,
+        "Gmres": Gmres,
         "IO": IO,
         "IOFormat": IOFormat,
         "supersonic_inflow": supersonic_inflow,
