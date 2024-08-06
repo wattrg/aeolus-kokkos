@@ -131,17 +131,23 @@ int SteadyState::initialise() {
     // initialise the JFNK solver
     int jfnk_init = jfnk_.initialise();
 
-    // write the initial residuals
+    // start the diagnostics files
     if (diagnostics_frequency_ > 0) {
+        // absolute residuals
         std::ofstream abs_residual_file("log/absolute_residuals.dat", std::ios_base::out);
         abs_residual_file
             << "step step global mass momentum_x momentum_y momentum_z energy\n";
 
+        // relative residuals
         std::ofstream rel_residual_file("log/relative_residuals.dat", std::ios_base::out);
         rel_residual_file
             << "step step global mass momentum_x momentum_y momentum_z energy\n";
 
         write_residuals(0);
+
+        // gmres diagnostics
+        std::ofstream gmres_diagnostics("log/gmres_diagnostics.dat", std::ios_base::out);
+        gmres_diagnostics << "step converged residual tolerance n_iters\n";
     }
 
     return ic_result + conversion_result + jfnk_init;
@@ -204,5 +210,11 @@ bool SteadyState::write_residuals(unsigned int step) {
     std::ofstream relative_residual_file("log/relative_residuals.dat",
                                          std::ios_base::app);
     rel_norms.write_to_file(relative_residual_file, (Ibis::real)step, step);
+
+    const GmresResult& gmres_result = jfnk_.last_gmres_result();
+    std::ofstream gmres_diagnostics("log/gmres_diagnostics.dat", std::ios_base::app);
+    gmres_diagnostics << step << " " << gmres_result.success << " "
+                      << gmres_result.residual << " " << gmres_result.tol << " "
+                      << gmres_result.n_iters << std::endl;
     return true;
 }

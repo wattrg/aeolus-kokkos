@@ -43,7 +43,7 @@ public:
 
     Ibis::real target_residual() const { return tolerance_; }
 
-    GmresResult last_gmres_result() const { return last_gmres_result_; }
+    const GmresResult& last_gmres_result() const { return last_gmres_result_; }
 
 private:
     std::shared_ptr<PseudoTransientLinearSystem> system_;
