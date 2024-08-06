@@ -3,6 +3,75 @@
 #include <linear_algebra/gmres.h>
 #include <linear_algebra/linear_system.h>
 
+#include "util/types.h"
+
+using HostExecSpace = Ibis::DefaultHostExecSpace;
+
+void compute_r0_(std::shared_ptr<LinearSystem> system, Ibis::Vector<Ibis::real>& x0,
+                 Ibis::Vector<Ibis::real> r0, Ibis::Vector<Ibis::real> w) {
+    system->matrix_vector_product(x0, w);
+
+    auto rhs = system->rhs();
+    size_t num_vars = system->num_vars();
+    Kokkos::parallel_for(
+        "Gmres::b-Ax0", num_vars,
+        KOKKOS_LAMBDA(const size_t i) { r0(i) = rhs(i) - w(i); });
+}
+
+void apply_rotations_to_hessenberg_(Ibis::Matrix<Ibis::real, HostExecSpace> H0,
+                                    Ibis::Matrix<Ibis::real, HostExecSpace> H1,
+                                    Ibis::Matrix<Ibis::real, HostExecSpace> Q0,
+                                    Ibis::Matrix<Ibis::real, HostExecSpace> Q1,
+                                    Ibis::Matrix<Ibis::real, HostExecSpace> Omega,
+                                    Ibis::Vector<Ibis::real, HostExecSpace> g0,
+                                    Ibis::Vector<Ibis::real, HostExecSpace> g1,
+                                    Ibis::Vector<Ibis::real, HostExecSpace> hr,
+                                    size_t j) {
+    // progressively rotate the Hessenberg into the QR factorisation using
+    // plane rotations, on the cpu
+    if (j != 0) {
+        // apply previous rotations to the new column of the Hessenberg
+        auto Q_sub = Q0.sub_matrix(0, j + 1, 0, j + 1);
+        auto h_col_j = H0.sub_matrix(0, j + 1, 0, j + 1).column(j);
+        auto h_rotated = hr.sub_vector(0, j + 1);
+        Ibis::gemv(Q_sub, h_col_j, h_rotated);
+        h_col_j.deep_copy_layout(h_rotated);
+    }
+
+    // build the rotation matrix for this step
+    Omega.set_to_identity();
+    Ibis::real denom = Ibis::sqrt(H0(j, j) * H0(j, j) + H0(j + 1, j) * H0(j + 1, j));
+    Ibis::real si = H0(j + 1, j) / denom;
+    Ibis::real ci = H0(j, j) / denom;
+    Omega(j, j) = ci;
+    Omega(j, j + 1) = si;
+    Omega(j + 1, j) = -si;
+    Omega(j + 1, j + 1) = ci;
+
+    // rotate the hessenberg matrix and the right hand side
+    auto H_old = H0.sub_matrix(0, j + 2, 0, j + 2);
+    auto H_new = H1.sub_matrix(0, j + 2, 0, j + 2);
+    auto Omega_sub = Omega.sub_matrix(0, j + 2, 0, j + 2);
+
+    auto g = g0.sub_vector(0, j + 2);
+    auto g_new = g1.sub_vector(0, j + 2);
+    Ibis::gemm(Omega_sub, H_old, H_new);
+    Ibis::gemv(Omega_sub, g, g_new);
+
+    // and update the global rotation matrix
+    auto Q_new = Q1.sub_matrix(0, j + 2, 0, j + 2);
+    auto Q_old = Q0.sub_matrix(0, j + 2, 0, j + 2);
+    if (j == 0) {
+        Q_new.deep_copy(Omega_sub);
+    } else {
+        Ibis::gemm(Omega_sub, Q_old, Q_new);
+    }
+
+    g.deep_copy_layout(g_new);
+    Q_old.deep_copy(Q_new);
+    H_old.deep_copy(H_new);
+}
+
 GmresResult::GmresResult(bool success_, size_t n_iters_, Ibis::real tol_,
                          Ibis::real residual_)
     : success(success_), n_iters(n_iters_), tol(tol_), residual(residual_) {}
@@ -47,7 +116,7 @@ Gmres::Gmres(std::shared_ptr<LinearSystem> system, json config)
 GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
                          Ibis::Vector<Ibis::real>& x0) {
     // initialise the intial residuals and first krylov vector
-    compute_r0_(system, x0);
+    compute_r0_(system, x0, r0_, w_);
     Ibis::real beta = Ibis::norm2(r0_);
     g0_(0) = beta;
     Ibis::scale(r0_, v_, 1.0 / beta);
@@ -73,7 +142,8 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
         // progressively rotate the Hessenberg into upper-triangular form
         // so we can calculate the residual of this step, and later solve
         // the least squares problem
-        apply_rotations_to_hessenberg_(j);
+        apply_rotations_to_hessenberg_(H0_, H1_, Q0_, Q1_, Omega_, g0_, g1_, h_rotated_,
+                                       j);
 
         // check convergence
         Ibis::real residual = Ibis::abs(g0_(j + 1));
@@ -99,63 +169,6 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
     Ibis::add_scaled_vector(x0, w_, 1.0);
 
     return result;
-}
-
-void Gmres::apply_rotations_to_hessenberg_(size_t j) {
-    // progressively rotate the Hessenberg into the QR factorisation using
-    // plane rotations, on the cpu
-    if (j != 0) {
-        // apply previous rotations to the new column of the Hessenberg
-        auto Q_sub = Q0_.sub_matrix(0, j + 1, 0, j + 1);
-        auto h_col_j = H0_.sub_matrix(0, j + 1, 0, j + 1).column(j);
-        auto h_rotated = h_rotated_.sub_vector(0, j + 1);
-        Ibis::gemv(Q_sub, h_col_j, h_rotated);
-        h_col_j.deep_copy_layout(h_rotated);
-    }
-
-    // build the rotation matrix for this step
-    Omega_.set_to_identity();
-    Ibis::real denom = Ibis::sqrt(H0_(j, j) * H0_(j, j) + H0_(j + 1, j) * H0_(j + 1, j));
-    Ibis::real si = H0_(j + 1, j) / denom;
-    Ibis::real ci = H0_(j, j) / denom;
-    Omega_(j, j) = ci;
-    Omega_(j, j + 1) = si;
-    Omega_(j + 1, j) = -si;
-    Omega_(j + 1, j + 1) = ci;
-
-    // rotate the hessenberg matrix and the right hand side
-    auto H = H0_.sub_matrix(0, j + 2, 0, j + 2);
-    auto H_new = H1_.sub_matrix(0, j + 2, 0, j + 2);
-    auto Omega = Omega_.sub_matrix(0, j + 2, 0, j + 2);
-
-    auto g = g0_.sub_vector(0, j + 2);
-    auto g_new = g1_.sub_vector(0, j + 2);
-    Ibis::gemm(Omega, H, H_new);
-    Ibis::gemv(Omega, g, g_new);
-
-    // and update the global rotation matrix
-    auto Q_new = Q1_.sub_matrix(0, j + 2, 0, j + 2);
-    auto Q_old = Q0_.sub_matrix(0, j + 2, 0, j + 2);
-    if (j == 0) {
-        Q_new.deep_copy(Omega);
-    } else {
-        Ibis::gemm(Omega, Q_old, Q_new);
-    }
-
-    g.deep_copy_layout(g_new);
-    Q_old.deep_copy(Q_new);
-    H.deep_copy(H_new);
-}
-
-void Gmres::compute_r0_(std::shared_ptr<LinearSystem> system,
-                        Ibis::Vector<Ibis::real>& x0) {
-    system->matrix_vector_product(x0, w_);
-
-    auto r0 = r0_;
-    auto w = w_;
-    auto rhs = system->rhs();
-    Kokkos::parallel_for(
-        "Gmres::b-Ax0", num_vars_, KOKKOS_LAMBDA(const int i) { r0(i) = rhs(i) - w(i); });
 }
 
 TEST_CASE("GMRES") {
