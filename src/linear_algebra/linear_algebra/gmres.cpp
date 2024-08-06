@@ -118,6 +118,10 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
     // initialise the intial residuals and first krylov vector
     compute_r0_(system, x0, r0_, w_);
     Ibis::real beta = Ibis::norm2(r0_);
+    if (beta < tol_) {
+        // the initial guess is within the tolerance
+        return GmresResult{true, 0, tol_, beta};
+    }
     g0_(0) = beta;
     Ibis::scale(r0_, v_, 1.0 / beta);
     krylov_vectors_.column(0).deep_copy_layout(v_);

@@ -3,8 +3,8 @@ gas_state = GasState()
 gas_state.T = 300
 gas_state.rho = 1.225
 gas_model.update_thermo_from_rhoT(gas_state)
-# flow_state = FlowState(gas=gas_state, vx=1000.0, vy=500.0)
-flow_state = FlowState(gas=gas_state, vx=0.0, vy=0.0)
+flow_state = FlowState(gas=gas_state, vx=1000.0, vy=500.0)
+# flow_state = FlowState(gas=gas_state, vx=0.0, vy=0.0)
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator=Hanel(),
@@ -19,7 +19,7 @@ config.solver = SteadyState(
     plot_frequency=1,
     print_frequency=1,
     diagnostics_frequency=1,
-    linear_solver=Gmres(max_iters=9*4, tol=1e-10)
+    linear_solver=Gmres(max_iters=1, tol=1e-10)
 )
 
 config.grid = Block(
