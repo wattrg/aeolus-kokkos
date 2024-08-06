@@ -81,6 +81,10 @@ void SteadyStateLinearisation::eval_rhs() {
         });
 }
 
+void SteadyStateLinearisation::set_precondition_rhs(Ibis::Vector<Ibis::real>& rhs) {
+    precondition_rhs_.deep_copy_space(rhs);
+}
+
 void SteadyStateLinearisation::set_pseudo_time_step(Ibis::real dt_star) {
     dt_star_ = dt_star;
 }

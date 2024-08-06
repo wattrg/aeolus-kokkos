@@ -73,7 +73,8 @@ public:
 public:
     FGmres() {}
 
-    FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters, Ibis::real tol);
+    FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
+           const size_t max_inner_iters, Ibis::real tol, Ibis::real inner_tol);
 
     FGmres(std::shared_ptr<LinearSystem> system, json config);
 
@@ -82,12 +83,18 @@ public:
 private:
     // configuration
     size_t max_iters_;
+    size_t max_inner_iters_;
     size_t num_vars_;
     Ibis::real tol_;
+    Ibis::real inner_tol_;
+
+    // the inner gmres
+    Gmres inner_;
 
 public:  // this has to be public to access from inside kernels
     // memory
     Ibis::Matrix<Ibis::real> krylov_vectors_;
+    Ibis::Matrix<Ibis::real> preconditioned_krylov_vectors_;
     Ibis::Vector<Ibis::real> v_;
     Ibis::Vector<Ibis::real> z_;
     Ibis::Vector<Ibis::real> r0_;

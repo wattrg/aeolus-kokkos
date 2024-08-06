@@ -155,18 +155,124 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
         }
     }
 
+    // return the guess, even if we didn't converge
     size_t n_vectors = result.n_iters;
     auto H = H0_.sub_matrix(0, n_vectors, 0, n_vectors);
     auto V = krylov_vectors_.columns(0, n_vectors);
     auto g = g0_.sub_vector(0, n_vectors);
     auto ym_host = ym_host_.sub_vector(0, n_vectors);
     auto ym = ym_.sub_vector(0, n_vectors);
-
-    // return the guess, even if we didn't converge
     Ibis::upper_triangular_solve(H, ym_host, g);
     ym.deep_copy_space(ym_host);
     Ibis::gemv(V, ym, w_);
     Ibis::add_scaled_vector(x0, w_, 1.0);
+
+    return result;
+}
+
+FGmres::FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
+               const size_t max_inner_iters, Ibis::real tol, Ibis::real inner_tol) {
+    tol_ = tol;
+    inner_tol_ = inner_tol;
+    num_vars_ = system->num_vars();
+    max_iters_ = Kokkos::min(num_vars_, max_iters);
+    max_inner_iters_ = Kokkos::min(num_vars_, max_inner_iters);
+
+    // least squares problem
+    H0_ =
+        Ibis::Matrix<Ibis::real, HostExecSpace>("FGmres::H0", max_iters_ + 1, max_iters_);
+    H1_ =
+        Ibis::Matrix<Ibis::real, HostExecSpace>("FGmres::H1", max_iters_ + 1, max_iters_);
+    Q0_ = Ibis::Matrix<Ibis::real, HostExecSpace>("FGmres::Q0", max_iters_ + 1,
+                                                  max_iters_ + 1);
+    Q1_ = Ibis::Matrix<Ibis::real, HostExecSpace>("FGmres::Q1", max_iters_ + 1,
+                                                  max_iters_ + 1);
+    Omega_ = Ibis::Matrix<Ibis::real, HostExecSpace>("FGmres::Gamma", max_iters_ + 1,
+                                                     max_iters_ + 1);
+    g0_ = Ibis::Vector<Ibis::real, HostExecSpace>("FGmres::g0", max_iters_ + 1);
+    g1_ = Ibis::Vector<Ibis::real, HostExecSpace>("FGmres::g1", max_iters_ + 1);
+    h_rotated_ =
+        Ibis::Vector<Ibis::real, HostExecSpace>("FGmres::h_rotated", max_iters_ + 1);
+    ym_host_ = Ibis::Vector<Ibis::real, HostExecSpace>("FGmres::ym_h", max_iters_ + 1);
+    ym_ = Ibis::Vector<Ibis::real>("FGmres::ym_d", max_iters_ + 1);
+
+    // Krylov subspace and memory for Arnoldi procedure
+    krylov_vectors_ =
+        Ibis::Matrix<Ibis::real>("FGmres::krylov_vectors", num_vars_, max_iters_ + 1);
+    preconditioned_krylov_vectors_ = Ibis::Matrix<Ibis::real>(
+        "FGmres::preconditioned_krylov_vectors", num_vars_, max_iters_ + 1);
+    r0_ = Ibis::Vector<Ibis::real>("FGmres::r0", num_vars_);
+    w_ = Ibis::Vector<Ibis::real>("FGmres::w", num_vars_);
+    v_ = Ibis::Vector<Ibis::real>("FGmres::v", num_vars_);
+    z_ = Ibis::Vector<Ibis::real>("FFGmres::z", num_vars_);
+
+    // Inner gmres
+    inner_ = Gmres(system, max_inner_iters_, inner_tol_);
+}
+
+FGmres::FGmres(std::shared_ptr<LinearSystem> system, json config)
+    : FGmres(system, config.at("max_iters"), config.at("max_inner_iters"),
+             config.at("tol"), config.at("inner_tol")) {}
+
+GmresResult FGmres::solve(std::shared_ptr<LinearSystem> system,
+                          Ibis::Vector<Ibis::real>& x) {
+    // initialise the intial residuals and first krylov vector
+    compute_r0_(system, x, r0_, w_);
+    Ibis::real beta = Ibis::norm2(r0_);
+    g0_(0) = beta;
+    Ibis::scale(r0_, v_, 1.0 / beta);
+    krylov_vectors_.column(0).deep_copy_layout(v_);
+
+    // set the rotation matrices to the identity, so they
+    // don't rotate anything before we calculate rotations
+    Q0_.set_to_identity();
+    Q1_.set_to_identity();
+
+    GmresResult result{false, 0, tol_, beta};
+    for (size_t j = 0; j < max_iters_; j++) {
+        // solve the precondition system
+        system->set_precondition_rhs(v_);
+        GmresResult inner_result = inner_.solve(system, z_);
+        printf("j: %zu, inner tol: %f\n", j, inner_result.residual);
+        
+        // build the next krylov vector and entries in the Hessenberg matrix
+        system->matrix_vector_product(z_, w_);
+        for (size_t i = 0; i < j + 1; i++) {
+            H0_(i, j) = Ibis::dot(w_, krylov_vectors_.column(i));
+            Ibis::add_scaled_vector(w_, krylov_vectors_.column(i), -H0_(i, j));
+        }
+        H0_(j + 1, j) = Ibis::norm2(w_);
+        Ibis::scale(w_, v_, 1.0 / H0_(j + 1, j));
+        krylov_vectors_.column(j + 1).deep_copy_layout(v_);
+        preconditioned_krylov_vectors_.column(j + 1).deep_copy_layout(z_);
+
+        // progressively rotate the Hessenberg into upper-triangular form
+        // so we can calculate the residual of this step, and later solve
+        // the least squares problem
+        apply_rotations_to_hessenberg_(H0_, H1_, Q0_, Q1_, Omega_, g0_, g1_, h_rotated_,
+                                       j);
+
+        // check convergence
+        Ibis::real residual = Ibis::abs(g0_(j + 1));
+        result.residual = residual;
+        result.n_iters = j + 1;
+        if (residual < tol_) {
+            result.success = true;
+            break;
+        }
+    }
+
+    // return the guess, even if we didn't converge
+    size_t n_vectors = result.n_iters;
+    auto H = H0_.sub_matrix(0, n_vectors, 0, n_vectors);
+    auto Z = preconditioned_krylov_vectors_.columns(0, n_vectors);
+    auto g = g0_.sub_vector(0, n_vectors);
+    auto ym_host = ym_host_.sub_vector(0, n_vectors);
+    auto ym = ym_.sub_vector(0, n_vectors);
+    Ibis::upper_triangular_solve(H, ym_host, g);
+    ym.deep_copy_space(ym_host);
+    Ibis::gemv(Z, ym, w_);
+    Ibis::add_scaled_vector(x, w_, 1.0);
 
     return result;
 }
@@ -208,6 +314,10 @@ TEST_CASE("GMRES") {
 
         void eval_rhs() {}
 
+        void set_precondition_rhs(Ibis::Vector<Ibis::real>& rhs) {
+            precondition_rhs_.deep_copy_space(rhs);
+        }
+
         void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                    Ibis::Vector<Ibis::real>& res) {
             Ibis::gemv(matrix_, vec, res);
@@ -229,11 +339,96 @@ TEST_CASE("GMRES") {
     private:
         Ibis::Matrix<Ibis::real, ExecSpace> matrix_;
         Ibis::Vector<Ibis::real, ExecSpace> rhs_;
+        Ibis::Vector<Ibis::real, ExecSpace> precondition_rhs_;
     };
 
     std::shared_ptr<LinearSystem> sys{new TestLinearSystem()};
 
     Gmres solver{sys, 5, 1e-10};
+    Ibis::Vector<Ibis::real> x{"x", 5};
+    GmresResult result = solver.solve(sys, x);
+
+    auto x_h = x.host_mirror();
+    x_h.deep_copy_space(x);
+
+    CHECK(result.success == true);
+    CHECK(x_h(0) == doctest::Approx(1.0));
+    CHECK(x_h(1) == doctest::Approx(0.0));
+    CHECK(x_h(2) == doctest::Approx(-1.0));
+    CHECK(x_h(3) == doctest::Approx(1.5));
+    CHECK(x_h(4) == doctest::Approx(0.5));
+}
+
+TEST_CASE("FGMRES") {
+    class TestLinearSystem : public LinearSystem {
+    public:
+        using ExecSpace = Kokkos::DefaultExecutionSpace;
+
+        TestLinearSystem() {
+            matrix_ = Ibis::Matrix<Ibis::real, ExecSpace>("A", 5, 5);
+            auto matrix_h = matrix_.host_mirror();
+            matrix_h(0, 0) = 2.0;
+            matrix_h(0, 1) = -1.0;
+            matrix_h(1, 0) = -1.0;
+            matrix_h(1, 1) = 2.0;
+            matrix_h(1, 2) = -1.0;
+            matrix_h(2, 1) = -1.0;
+            matrix_h(2, 2) = 2.0;
+            matrix_h(2, 3) = -1.0;
+            matrix_h(3, 2) = -1.0;
+            matrix_h(3, 3) = 2.0;
+            matrix_h(3, 4) = -1.0;
+            matrix_h(4, 3) = -1.0;
+            matrix_h(4, 4) = 2.0;
+            matrix_.deep_copy_space(matrix_h);
+
+            rhs_ = Ibis::Vector<Ibis::real, ExecSpace>("rhs", 5);
+            auto rhs_h = rhs_.host_mirror();
+            rhs_h(0) = 2.0;
+            rhs_h(1) = 0.0;
+            rhs_h(2) = -3.5;
+            rhs_h(3) = 3.5;
+            rhs_h(4) = -0.5;
+            rhs_.deep_copy_space(rhs_h);
+
+            precondition_rhs_ = Ibis::Vector<Ibis::real, ExecSpace>("precondition_rhs", 5);
+        }
+
+        ~TestLinearSystem() {}
+
+        void eval_rhs() {}
+
+        void set_precondition_rhs(Ibis::Vector<Ibis::real>& rhs) {
+            precondition_rhs_.deep_copy_space(rhs);
+        }
+
+        void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
+                                   Ibis::Vector<Ibis::real>& res) {
+            Ibis::gemv(matrix_, vec, res);
+        }
+
+        KOKKOS_INLINE_FUNCTION
+        Ibis::real& rhs(const size_t i) const { return rhs_(i); }
+
+        KOKKOS_INLINE_FUNCTION
+        Ibis::real& rhs(const size_t i, const size_t j) const {
+            (void)j;
+            return rhs_(i);
+        }
+
+        Ibis::Vector<Ibis::real>& rhs() { return rhs_; }
+
+        size_t num_vars() const { return 5; }
+
+    private:
+        Ibis::Matrix<Ibis::real, ExecSpace> matrix_;
+        Ibis::Vector<Ibis::real, ExecSpace> rhs_;
+        Ibis::Vector<Ibis::real, ExecSpace> precondition_rhs_;
+    };
+
+    std::shared_ptr<LinearSystem> sys{new TestLinearSystem()};
+
+    FGmres solver{sys, 5, 4, 1e-10, 1e-1};
     Ibis::Vector<Ibis::real> x{"x", 5};
     GmresResult result = solver.solve(sys, x);
 

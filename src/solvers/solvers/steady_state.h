@@ -27,6 +27,8 @@ public:
 
     void eval_rhs();
 
+    void set_precondition_rhs(Ibis::Vector<Ibis::real>& rhs);
+
     KOKKOS_INLINE_FUNCTION
     Ibis::real& rhs(const size_t i) const { return rhs_(i); }
 
@@ -62,6 +64,7 @@ private:
 
     // memory owned by this class
     Ibis::Vector<Ibis::real> rhs_;   // the rhs of the system of equations
+    Ibis::Vector<Ibis::real> precondition_rhs_;
     FlowStates<Ibis::dual> fs_tmp_;  // temporary storage for perturbed flow states
     ConservedQuantities<Ibis::dual> cq_tmp_;  // storage for perturbed cq
 
