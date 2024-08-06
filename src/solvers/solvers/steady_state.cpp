@@ -58,8 +58,8 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
         KOKKOS_LAMBDA(const size_t cell_i) {
             const size_t vector_idx = cell_i * n_cons;
             for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
-                result(vector_idx + cons_i) =
-                    1 / dt_star * vec(vector_idx + cons_i) - Ibis::dual_part(residuals(cell_i, cons_i));
+                result(vector_idx + cons_i) = 1 / dt_star * vec(vector_idx + cons_i) -
+                                              Ibis::dual_part(residuals(cell_i, cons_i));
             }
         });
 }
@@ -131,7 +131,7 @@ int SteadyState::initialise() {
 int SteadyState::finalise() { return 0; }
 
 int SteadyState::take_step() {
-    jfnk_.step(sim_, *cq_, *fs_);
+    GmresResult result = jfnk_.step(sim_, *cq_, *fs_);
     return 0;
 }
 

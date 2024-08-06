@@ -25,8 +25,8 @@ public:
 
     int initialise();
 
-    void step(std::shared_ptr<Sim<Ibis::dual>>& sim, ConservedQuantities<Ibis::dual>& cq,
-              FlowStates<Ibis::dual>& fs);
+    GmresResult step(std::shared_ptr<Sim<Ibis::dual>>& sim,
+                     ConservedQuantities<Ibis::dual>& cq, FlowStates<Ibis::dual>& fs);
 
     void solve(std::shared_ptr<Sim<Ibis::dual>>& sim);
 

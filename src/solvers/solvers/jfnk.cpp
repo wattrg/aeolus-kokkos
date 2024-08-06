@@ -25,6 +25,7 @@ void Jfnk::step(std::shared_ptr<Sim<Ibis::dual>>& sim,
     system_->eval_rhs();
     GmresResult result = gmres_.solve(system_, dU_);
     apply_update_(sim, cq, fs);
+    return result;
 }
 
 void Jfnk::apply_update_(std::shared_ptr<Sim<Ibis::dual>>& sim,

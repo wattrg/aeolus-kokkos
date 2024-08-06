@@ -1,5 +1,5 @@
-#include <util/dual.h>
 #include <doctest/doctest.h>
+#include <util/dual.h>
 
 TEST_CASE("Dual::addition") {
     Ibis::dual x{3.0, 1.0};
@@ -89,7 +89,6 @@ TEST_CASE("Dual::dual_divde_real") {
 
     CHECK(d.real() == doctest::Approx(1.5));
     CHECK(d.dual() == doctest::Approx(0.5));
-    
 }
 
 TEST_CASE("Dual::real_divde_dual") {
@@ -102,7 +101,7 @@ TEST_CASE("Dual::real_divde_dual") {
 }
 
 TEST_CASE("Dual::sqrt") {
-    Ibis::dual x {9.0, 3.0};
+    Ibis::dual x{9.0, 3.0};
     auto d = Ibis::sqrt(x);
 
     CHECK(d.real() == doctest::Approx(3.0));
