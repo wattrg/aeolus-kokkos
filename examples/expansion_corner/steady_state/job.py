@@ -1,6 +1,11 @@
+import math
+
 mach = 3.0
 T = 300
-gas_model = IdealGas(R=287.0)
+n_flows = 3
+n_plots = 10
+length = 1.0
+gas_model = IdealGas(R=287)
 gas_state = GasState()
 gas_state.rho = 1.225
 gas_state.T = T
@@ -9,20 +14,19 @@ vx = mach * gas_model.speed_of_sound(gas_state)
 flow_state = FlowState(gas=gas_state, vx=vx)
 
 config.convective_flux = ConvectiveFlux(
-    flux_calculator=Hanel(),
-    reconstruction_order=1
+    flux_calculator = Hanel(),
+    reconstruction_order = 1,
+    limiter = Unlimited()
 )
 
 config.gas_model = gas_model
 
 config.solver = SteadyState(
-    cfl=1.0,
-    max_steps=1000,
-    print_frequency=10,
+    cfl=0.5,
+    max_steps=100,
     plot_frequency=10,
-    diagnostics_frequency=1,
-    tolerance=1e-2,
-    linear_solver=Gmres(tol=1e-10, max_iters=200)
+    print_frequency=10,
+    linear_solver=Gmres(tol=1e-10, max_iters=100)
 )
 
 config.grid = Block(
@@ -34,5 +38,3 @@ config.grid = Block(
         "wall": slip_wall(),
     }
 )
-
-config.io = IO(flow_format="native_text")
