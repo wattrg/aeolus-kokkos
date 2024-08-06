@@ -119,3 +119,17 @@ TEST_CASE("Dual::greater") {
     Ibis::dual y{2.0, 3.0};
     CHECK_LT(y, x);
 }
+
+TEST_CASE("Dual::x^2+2x") {
+    Ibis::dual x{2.0, 1.0};
+    auto y = x * x + 2 * x;
+    CHECK(y.real() == doctest::Approx(8.0));
+    CHECK(y.dual() == doctest::Approx(6.0));
+}
+
+TEST_CASE("Dual::x^2-sqrt(x)") {
+    Ibis::dual x{9.0, 1.0};
+    auto y = x * x - Ibis::sqrt(x);
+    CHECK(y.real() == doctest::Approx(78.0));
+    CHECK(y.dual() == doctest::Approx(18.0 - 1.0 / 6.0));
+}
