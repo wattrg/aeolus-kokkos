@@ -34,7 +34,6 @@ Ibis::real LinearSchedule::eval(Ibis::real t) {
     for (size_t i = 0; i < times_.size(); i++) {
         if (t > times_[i] && t < times_[i + 1]) {
             Ibis::real frac = (t - times_[i]) / (times_[i + 1] - times_[i]);
-            printf("i = %lu, frac = %f\n", i, frac);
             cfl = cfls_[i] + frac * (cfls_[i + 1] - cfls_[i]);
             return cfl;
         }

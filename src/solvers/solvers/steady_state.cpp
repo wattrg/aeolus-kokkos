@@ -55,11 +55,11 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
     // set the components of vec to the dual component of dudt
     Kokkos::parallel_for(
         "SteadyStateLinearisation::set_vector", n_cells_,
-        KOKKOS_LAMBDA(const int cell_i) {
+        KOKKOS_LAMBDA(const size_t cell_i) {
             const size_t vector_idx = cell_i * n_cons;
             for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
                 result(vector_idx + cons_i) =
-                    1 / dt_star - Ibis::dual_part(residuals(cell_i, cons_i));
+                    1 / dt_star * vec(vector_idx + cons_i) - Ibis::dual_part(residuals(cell_i, cons_i));
             }
         });
 }
@@ -145,7 +145,7 @@ bool SteadyState::residuals_this_step(unsigned int step) {
 }
 
 bool SteadyState::plot_this_step(unsigned int step) {
-    return (step != 0 && plot_frequency_ % plot_frequency_ == 0);
+    return (step != 0 && step % plot_frequency_ == 0);
 }
 
 int SteadyState::plot_solution(unsigned int step) {
