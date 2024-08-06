@@ -4,9 +4,11 @@
 template <typename T>
 void ConservedQuantitiesNorm<T>::write_to_file(std::ofstream& f, Ibis::real time,
                                                size_t step) {
-    f << time << " " << step << " " << Ibis::real_part(mass()) << " "
-      << Ibis::real_part(momentum_x()) << " " << Ibis::real_part(momentum_y()) << " "
-      << Ibis::real_part(momentum_z()) << " " << Ibis::real_part(energy()) << std::endl;
+    f << time << " " << step << " " << Ibis::real_part(global()) << " " 
+            << Ibis::real_part(mass())
+            << " " << Ibis::real_part(momentum_x()) << " "
+            << Ibis::real_part(momentum_y()) << " " << Ibis::real_part(momentum_z())
+            << " " << Ibis::real_part(energy()) << std::endl;
 }
 template class ConservedQuantitiesNorm<Ibis::real>;
 template class ConservedQuantitiesNorm<Ibis::dual>;
@@ -42,16 +44,23 @@ ConservedQuantitiesNorm<T> ConservedQuantities<T>::L2_norms() const {
     Kokkos::parallel_reduce(
         "L2_norm", num_values_,
         KOKKOS_CLASS_LAMBDA(const size_t i, ConservedQuantitiesNorm<T>& tl_cq) {
-            tl_cq.mass() += mass(i) * mass(i);
-            tl_cq.momentum_x() += momentum_x(i) * momentum_x(i);
-            tl_cq.momentum_y() += momentum_y(i) * momentum_y(i);
-            if (dim_ == 3) {
-                tl_cq.momentum_z() += momentum_z(i) * momentum_z(i);
-            }
-            tl_cq.energy() += energy(i) * energy(i);
+            T mass_i = mass(i);
+            T momentum_xi = momentum_x(i);
+            T momentum_yi = momentum_y(i);
+            T momentum_zi = (dim_ == 3) ? momentum_z(i) : T(0.0);
+            T energy_i = energy(i);
+            tl_cq.mass() += mass_i * mass_i;
+            tl_cq.momentum_x() += momentum_xi * momentum_xi;
+            tl_cq.momentum_y() += momentum_yi * momentum_yi;
+            tl_cq.momentum_z() += momentum_zi * momentum_zi;
+            tl_cq.energy() += energy_i * energy_i;
+            tl_cq.global() += mass_i * mass_i + momentum_xi * momentum_xi +
+                              momentum_yi * momentum_yi + momentum_zi * momentum_zi +
+                              energy_i * energy_i;
         },
         Kokkos::Sum<ConservedQuantitiesNorm<T>>(norms));
 
+    norms.global() = Ibis::sqrt(norms.global());
     norms.mass() = Ibis::sqrt(norms.mass());
     norms.momentum_x() = Ibis::sqrt(norms.momentum_x());
     norms.momentum_y() = Ibis::sqrt(norms.momentum_y());

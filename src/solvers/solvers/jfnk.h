@@ -21,7 +21,8 @@ public:
     Jfnk() {}
 
     Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
-         std::unique_ptr<CflSchedule>&&, json config);
+         std::unique_ptr<CflSchedule>&&,
+         std::shared_ptr<ConservedQuantities<Ibis::dual>> resiudals, json config);
 
     int initialise();
 
@@ -32,11 +33,17 @@ public:
 
     size_t max_steps() const { return max_steps_; }
 
-    Ibis::real pseudo_time_step_size() const { return stable_dt_; };
+    Ibis::real pseudo_time_step_size() const { return stable_dt_; }
 
-    Ibis::real global_residual() const { return std::numeric_limits<Ibis::real>::max(); };
+    ConservedQuantitiesNorm<Ibis::dual> residual_norms() const { return residual_norms_; }
 
-    Ibis::real target_residual() const { return tolerance_; };
+    ConservedQuantitiesNorm<Ibis::dual> relative_residual_norms() const {
+        return residual_norms_ / initial_residual_norms_;
+    }
+
+    Ibis::real target_residual() const { return tolerance_; }
+
+    GmresResult last_gmres_result() const { return last_gmres_result_; }
 
 private:
     std::shared_ptr<PseudoTransientLinearSystem> system_;
@@ -46,8 +53,12 @@ private:
 
     size_t max_steps_;
     Ibis::real tolerance_;
-    Ibis::real global_residual_;
     Ibis::real stable_dt_;
+
+    std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals_;
+    ConservedQuantitiesNorm<Ibis::dual> residual_norms_;
+    ConservedQuantitiesNorm<Ibis::dual> initial_residual_norms_;
+    GmresResult last_gmres_result_;
 
 public:  // this is public to appease NVCC
     void apply_update_(std::shared_ptr<Sim<Ibis::dual>>& sim,

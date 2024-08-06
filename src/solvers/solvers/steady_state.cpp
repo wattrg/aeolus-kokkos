@@ -10,6 +10,7 @@
 
 SteadyStateLinearisation::SteadyStateLinearisation(
     std::shared_ptr<Sim<Ibis::dual>> sim,
+    std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals,
     std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
     std::shared_ptr<FlowStates<Ibis::dual>> fs) {
     sim_ = sim;
@@ -25,14 +26,14 @@ SteadyStateLinearisation::SteadyStateLinearisation(
     rhs_ = Ibis::Vector<Ibis::real>{"SteadyStateLinearisation::rhs", n_vars_};
     fs_tmp_ = FlowStates<Ibis::dual>{n_total_cells_};
     cq_tmp_ = ConservedQuantities<Ibis::dual>{n_total_cells_, dim};
-    residuals_ = ConservedQuantities<Ibis::dual>{n_total_cells_, dim};
+    residuals_ = residuals;
 }
 
 void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                                      Ibis::Vector<Ibis::real>& result) {
     // set the dual components of the conserved quantities
     size_t n_cons = n_cons_;
-    auto residuals = residuals_;
+    auto residuals = *residuals_;
     Ibis::real dt_star = dt_star_;
     auto cq_tmp = cq_tmp_;
     auto cq = *cq_;
@@ -65,12 +66,12 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
 }
 
 void SteadyStateLinearisation::eval_rhs() {
-    sim_->fv.compute_dudt(*fs_, sim_->grid, residuals_, sim_->gas_model,
+    sim_->fv.compute_dudt(*fs_, sim_->grid, *residuals_, sim_->gas_model,
                           sim_->trans_prop);
 
     size_t n_cons = n_cons_;
     auto rhs = rhs_;
-    auto residuals = residuals_;
+    auto residuals = *residuals_;
     Kokkos::parallel_for(
         "SteadyStateLinearisation::eval_rhs", n_cells_, KOKKOS_LAMBDA(const int cell_i) {
             const size_t vector_idx = cell_i * n_cons;
@@ -100,12 +101,15 @@ SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string gr
     cq_ = std::shared_ptr<ConservedQuantities<Ibis::dual>>{
         new ConservedQuantities<Ibis::dual>(n_total_cells, dim)};
 
+    residuals_ = std::shared_ptr<ConservedQuantities<Ibis::dual>>{
+        new ConservedQuantities<Ibis::dual>(n_total_cells, dim)};
+
     // set up the linear system and non-linear solver
+    auto cfl = make_cfl_schedule(solver_config.at("cfl"));
     std::unique_ptr<PseudoTransientLinearSystem> system =
         std::unique_ptr<PseudoTransientLinearSystem>(
-            new SteadyStateLinearisation(sim_, cq_, fs_));
-    auto cfl = make_cfl_schedule(solver_config.at("cfl"));
-    jfnk_ = Jfnk(std::move(system), std::move(cfl), solver_config);
+            new SteadyStateLinearisation(sim_, residuals_, cq_, fs_));
+    jfnk_ = Jfnk(std::move(system), std::move(cfl), residuals_, solver_config);
 
     // configuration
     print_frequency_ = solver_config.at("print_frequency");
@@ -124,14 +128,29 @@ int SteadyState::initialise() {
         io_.read(*fs_, sim_->grid, sim_->gas_model, sim_->trans_prop, meta_data, 0);
     int conversion_result = primatives_to_conserved(*cq_, *fs_, sim_->gas_model);
 
+    // initialise the JFNK solver
     int jfnk_init = jfnk_.initialise();
+
+    // write the initial residuals
+    if (diagnostics_frequency_ > 0) {
+        std::ofstream abs_residual_file("log/absolute_residuals.dat", std::ios_base::out);
+        abs_residual_file
+            << "step step global mass momentum_x momentum_y momentum_z energy\n";
+
+        std::ofstream rel_residual_file("log/relative_residuals.dat", std::ios_base::out);
+        rel_residual_file
+            << "step step global mass momentum_x momentum_y momentum_z energy\n";
+
+        write_residuals(0);
+    }
+
     return ic_result + conversion_result + jfnk_init;
 }
 
 int SteadyState::finalise() { return 0; }
 
 int SteadyState::take_step() {
-    GmresResult result = jfnk_.step(sim_, *cq_, *fs_);
+    jfnk_.step(sim_, *cq_, *fs_);
     return 0;
 }
 
@@ -157,15 +176,33 @@ int SteadyState::plot_solution(unsigned int step) {
 }
 
 void SteadyState::print_progress(unsigned int step, Ibis::real wc) {
-    spdlog::info("  step: {:>8}, global residual {:.6e}, wc = {:.1f}s", step, -1.0, wc);
+    Ibis::real relative_global_residual = jfnk_.relative_residual_norms().global().real();
+    spdlog::info("  step: {:>8}, relative global residual {:.6e}, wc = {:.1f}s", step,
+                 relative_global_residual, wc);
 }
 
 bool SteadyState::stop_now(unsigned int step) { return (step >= max_step() - 1); }
 
 std::string SteadyState::stop_reason(unsigned int step) {
-    if (step > max_step()) return "reached max_step";
-    if (jfnk_.global_residual() < jfnk_.target_residual()) {
+    if (step >= max_step()) return "reached max_step";
+    if (jfnk_.residual_norms().global() < jfnk_.target_residual()) {
         return "reached target residual";
     }
     return "Shouldn't reach here";
+}
+
+bool SteadyState::write_residuals(unsigned int step) {
+    spdlog::debug("Writing residuals at step {}", step);
+
+    // the absolute residuals
+    ConservedQuantitiesNorm<Ibis::dual> abs_norms = jfnk_.residual_norms();
+    std::ofstream residual_file("log/absolute_residuals.dat", std::ios_base::app);
+    abs_norms.write_to_file(residual_file, (Ibis::real)step, step);
+
+    // the relative residuals
+    ConservedQuantitiesNorm<Ibis::dual> rel_norms = jfnk_.relative_residual_norms();
+    std::ofstream relative_residual_file("log/relative_residuals.dat",
+                                         std::ios_base::app);
+    rel_norms.write_to_file(relative_residual_file, (Ibis::real)step, step);
+    return true;
 }

@@ -13,6 +13,7 @@
 using json = nlohmann::json;
 
 struct GmresResult {
+    GmresResult();
     GmresResult(bool success, size_t n_iters, Ibis::real tol, Ibis::real residual);
 
     bool success;

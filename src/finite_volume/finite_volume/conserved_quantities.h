@@ -13,6 +13,7 @@ class ConservedQuantitiesNorm {
 public:
     KOKKOS_INLINE_FUNCTION
     ConservedQuantitiesNorm() {
+        global_ = 0.0;
         mass_ = 0.0;
         momentum_x_ = 0.0;
         momentum_y_ = 0.0;
@@ -22,6 +23,7 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     ConservedQuantitiesNorm(const ConservedQuantitiesNorm<T>& rhs) {
+        global_ = rhs.global_;
         mass_ = rhs.mass_;
         momentum_x_ = rhs.momentum_x_;
         momentum_y_ = rhs.momentum_y_;
@@ -31,6 +33,7 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     ConservedQuantitiesNorm& operator=(const ConservedQuantitiesNorm<T>& rhs) {
+        global_ = rhs.global_;
         mass_ = rhs.mass_;
         momentum_x_ = rhs.momentum_x_;
         momentum_y_ = rhs.momentum_y_;
@@ -41,6 +44,7 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     ConservedQuantitiesNorm& operator+=(const ConservedQuantitiesNorm<T>& rhs) {
+        global_ += rhs.global_;
         mass_ += rhs.mass_;
         momentum_x_ += rhs.momentum_x_;
         momentum_y_ += rhs.momentum_y_;
@@ -48,6 +52,21 @@ public:
         energy_ += rhs.energy_;
         return *this;
     }
+
+    friend ConservedQuantitiesNorm operator/(const ConservedQuantitiesNorm<T> num,
+                                             const ConservedQuantitiesNorm<T> den) {
+        ConservedQuantitiesNorm<T> res{};
+        res.global_ = num.global_ / den.global_;
+        res.mass_ = num.mass_ / den.mass_;
+        res.momentum_x_ = num.momentum_x_ / den.momentum_x_;
+        res.momentum_y_ = num.momentum_y_ / den.momentum_y_;
+        res.momentum_z_ = num.momentum_z_ / den.momentum_z_;
+        res.energy_ = num.energy_ / den.energy_;
+        return res;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    T& global() { return global_; }
 
     KOKKOS_INLINE_FUNCTION
     T& mass() { return mass_; }
@@ -67,6 +86,7 @@ public:
     void write_to_file(std::ofstream& f, Ibis::real time, size_t step);
 
 private:
+    T global_;
     T mass_;
     T momentum_x_;
     T momentum_y_;

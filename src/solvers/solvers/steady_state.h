@@ -15,6 +15,7 @@ class SteadyStateLinearisation : public PseudoTransientLinearSystem {
 public:
     // Construction / destruction
     SteadyStateLinearisation(std::shared_ptr<Sim<Ibis::dual>> sim,
+                             std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals,
                              std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
                              std::shared_ptr<FlowStates<Ibis::dual>> fs);
 
@@ -57,10 +58,10 @@ private:
     // isn't allocated by this class
     std::shared_ptr<ConservedQuantities<Ibis::dual>> cq_;
     std::shared_ptr<FlowStates<Ibis::dual>> fs_;
+    std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals_;
 
-    Ibis::Vector<Ibis::real> rhs_;  // the rhs of the system of equations
-
-    ConservedQuantities<Ibis::dual> residuals_;  // temporary storage for residuals
+    // memory owned by this class
+    Ibis::Vector<Ibis::real> rhs_;   // the rhs of the system of equations
     FlowStates<Ibis::dual> fs_tmp_;  // temporary storage for perturbed flow states
     ConservedQuantities<Ibis::dual> cq_tmp_;  // storage for perturbed cq
 
@@ -111,14 +112,12 @@ private:
         return sim_->fv.count_bad_cells(*fs_, sim_->grid.num_cells());
     }
 
-    bool write_residuals(unsigned int step) {
-        (void)step;
-        return true;
-    }
+    bool write_residuals(unsigned int step);
 
 private:
     // memory
     std::shared_ptr<ConservedQuantities<Ibis::dual>> cq_;
+    std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals_;
     std::shared_ptr<FlowStates<Ibis::dual>> fs_;
 
     // the core simulation

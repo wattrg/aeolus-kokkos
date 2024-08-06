@@ -7,6 +7,8 @@ GmresResult::GmresResult(bool success_, size_t n_iters_, Ibis::real tol_,
                          Ibis::real residual_)
     : success(success_), n_iters(n_iters_), tol(tol_), residual(residual_) {}
 
+GmresResult::GmresResult() : GmresResult(false, 0, -1.0, -1.0) {}
+
 Gmres::Gmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
              Ibis::real tol) {
     tol_ = tol;

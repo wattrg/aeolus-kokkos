@@ -75,7 +75,8 @@ int RungeKutta::initialise() {
         fv_.compute_dudt(flow_, grid_, k_[0], gas_model_, trans_prop_);
         {
             std::ofstream residual_file("log/residuals.dat", std::ios_base::out);
-            residual_file << "time step mass momentum_x momentum_y momentum_z energy\n";
+            residual_file
+                << "time step global mass momentum_x momentum_y momentum_z energy\n";
         }
         write_residuals(0);
     }
