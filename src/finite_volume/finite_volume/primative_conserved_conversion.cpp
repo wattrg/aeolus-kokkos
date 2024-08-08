@@ -10,10 +10,6 @@ int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T>& fs,
             T vx = cq.momentum_x(i) / rho;
             T vy = cq.momentum_y(i) / rho;
             T vz = (cq.dim() == 3) ? cq.momentum_z(i) / rho : 0.0;
-            // T vz = 0.0;
-            if (cq.dim() == 3) {
-                vz = cq.momentum_z(i) / rho;
-            }
             T ke = 0.5 * (vx * vx + vy * vy + vz * vz);
             T u = cq.energy(i) / rho - ke;
             fs.gas.rho(i) = rho;
