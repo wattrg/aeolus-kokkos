@@ -103,6 +103,10 @@ public:
             KOKKOS_LAMBDA(const size_t i) { data(i, i) = T(1.0); });
     }
 
+    void set_to_zero() {
+        Kokkos::deep_copy(data_, T(0.0));
+    }
+
     // Return a sub-matrix. The data is the same data, so any modifications
     // to either matrix will be seen in the other matrix
     Matrix<T, ExecSpace, Kokkos::LayoutStride, MemSpace> sub_matrix(
