@@ -54,7 +54,8 @@ void Jfnk::apply_update_(std::shared_ptr<Sim<Ibis::dual>>& sim,
         "Jfnk::apply_update", n_cells, KOKKOS_LAMBDA(const size_t cell_i) {
             const size_t vector_idx = cell_i * n_cons;
             for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
-                cq(cell_i, cons_i) += dU(vector_idx + cons_i);
+                cq(cell_i, cons_i).real() += dU(vector_idx + cons_i);
+                cq(cell_i, cons_i).dual() = 0.0;
             }
         });
     conserved_to_primatives(cq, fs, sim->gas_model);
