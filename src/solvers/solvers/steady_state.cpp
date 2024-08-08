@@ -81,7 +81,7 @@ void SteadyStateLinearisation::eval_rhs() {
         });
 }
 
-void SteadyStateLinearisation::set_precondition_rhs(Ibis::Vector<Ibis::real>& rhs) {
+void SteadyStateLinearisation::set_rhs(Ibis::Vector<Ibis::real>& rhs) {
     precondition_rhs_.deep_copy_space(rhs);
 }
 

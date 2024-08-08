@@ -73,23 +73,23 @@ public:
 public:
     FGmres() {}
 
-    FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
-           const size_t max_inner_iters, Ibis::real tol, Ibis::real inner_tol);
+    FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters, Ibis::real tol,
+           std::shared_ptr<LinearSystem> precondition_system,
+           const size_t max_precondition_iters, Ibis::real inner_tol);
 
-    FGmres(std::shared_ptr<LinearSystem> system, json config);
+    FGmres(std::shared_ptr<LinearSystem> system, std::shared_ptr<LinearSystem> preconditioner,
+           json config);
 
     GmresResult solve(std::shared_ptr<LinearSystem> system, Ibis::Vector<Ibis::real>& x);
 
 private:
     // configuration
     size_t max_iters_;
-    size_t max_inner_iters_;
     size_t num_vars_;
     Ibis::real tol_;
-    Ibis::real inner_tol_;
 
     // the inner gmres
-    Gmres inner_;
+    Gmres preconditioner_;
 
 public:  // this has to be public to access from inside kernels
     // memory

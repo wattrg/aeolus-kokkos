@@ -27,7 +27,7 @@ public:
 
     void eval_rhs();
 
-    void set_precondition_rhs(Ibis::Vector<Ibis::real>& rhs);
+    void set_rhs(Ibis::Vector<Ibis::real>& rhs);
 
     KOKKOS_INLINE_FUNCTION
     Ibis::real& rhs(const size_t i) const { return rhs_(i); }
