@@ -42,7 +42,8 @@ public:
      */
     size_t compute_dudt(FlowStates<T>& flow_state, const GridBlock<T>& grid,
                         ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
-                        TransportProperties<T>& trans_prop);
+                        TransportProperties<T>& trans_prop,
+                        bool allow_reconstruction = true);
 
     /**
      * Estimate the allowable global time step for a given flow

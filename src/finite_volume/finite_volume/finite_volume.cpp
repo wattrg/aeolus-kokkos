@@ -54,10 +54,11 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config) {
 template <typename T>
 size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, const GridBlock<T>& grid,
                                      ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
-                                     TransportProperties<T>& trans_prop) {
+                                     TransportProperties<T>& trans_prop,
+                                     bool allow_reconstruction) {
     apply_pre_reconstruction_bc(flow_state, grid, gas_model, trans_prop);
     convective_flux_.compute_convective_flux(flow_state, grid, gas_model, cell_grad_,
-                                             grad_calc_, flux_);
+                                             grad_calc_, flux_, allow_reconstruction);
     if (viscous_flux_.enabled()) {
         apply_pre_viscous_grad_bc(flow_state, grid, gas_model, trans_prop);
         viscous_flux_.compute_viscous_flux(flow_state, grid, gas_model, trans_prop,

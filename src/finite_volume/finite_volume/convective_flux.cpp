@@ -2,6 +2,7 @@
 #include <finite_volume/gradient.h>
 #include <spdlog/spdlog.h>
 #include <util/numeric_types.h>
+#include <stdexcept>
 
 std::string string_from_reconstruction_vars(ThermoReconstructionVars vars) {
     switch (vars) {
@@ -83,9 +84,11 @@ ConvectiveFlux<T>::ConvectiveFlux(const GridBlock<T>& grid, json config) {
 template <typename T>
 void ConvectiveFlux<T>::compute_convective_flux(
     const FlowStates<T>& flow_states, const GridBlock<T>& grid, IdealGas<T>& gas_model,
-    Gradients<T>& cell_grad, WLSGradient<T>& grad_calc, ConservedQuantities<T>& flux) {
+    Gradients<T>& cell_grad, WLSGradient<T>& grad_calc, ConservedQuantities<T>& flux,
+    bool allow_reconstruction) {
     // reconstruct
-    switch (reconstruction_order_) {
+    int reconstruction_order = (allow_reconstruction) ? reconstruction_order_ : 1;
+    switch (reconstruction_order) {
         case 1:
             copy_reconstruct(flow_states, grid);
             break;
@@ -94,6 +97,7 @@ void ConvectiveFlux<T>::compute_convective_flux(
             break;
         default:
             spdlog::error("Invalid reconstruction order {}", reconstruction_order_);
+            throw new std::runtime_error("Invalid reconstruction order");
     }
 
     // rotate velocity to the interface reference frame
