@@ -24,6 +24,11 @@ int Solver::solve() {
     spdlog::stopwatch sw;
     for (size_t step = 0; step < max_step(); step++) {
         int result = take_step();
+
+        if (residuals_this_step(step)) {
+            write_residuals(step);
+        }
+
         if (result != 0) {
             spdlog::error("step {} failed", step);
             plot_solution(step);
@@ -48,9 +53,6 @@ int Solver::solve() {
             print_progress(step, sw.elapsed().count());
         }
 
-        if (residuals_this_step(step)) {
-            write_residuals(step);
-        }
 
         if (plot_this_step(step)) {
             plot_solution(step);
