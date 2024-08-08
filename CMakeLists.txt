@@ -15,6 +15,11 @@ if (NOT Ibis_LINK_FS)
     set(Ibis_LINK_FS OFF)
 endif()
 
+# Optionally use mold (a fast, parallel linker)
+if (Ibis_USE_MOLD)
+    set(CMAKE_EXE_LINKER_FLAGS "-fuse-ld=mold")
+endif()
+
 # default install location is in inst folder in the
 # root of the repository
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/inst")
