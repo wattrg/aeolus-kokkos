@@ -10,6 +10,15 @@ TEST_CASE("Dual::addition") {
     CHECK(d.dual() == doctest::Approx(4.0));
 }
 
+TEST_CASE("Dual::+=") {
+    Ibis::dual x{3.0, 1.0};
+    Ibis::dual y{2.0, 3.0};
+    x += y;
+
+    CHECK(x.real() == doctest::Approx(5.0));
+    CHECK(x.dual() == doctest::Approx(4.0));
+}
+
 TEST_CASE("Dual::addition_real") {
     Ibis::dual x{3.0, 1.0};
     Ibis::real y = 2.0;
@@ -26,6 +35,15 @@ TEST_CASE("Dual::subtracton") {
 
     CHECK(d.real() == doctest::Approx(1.0));
     CHECK(d.dual() == doctest::Approx(-2.0));
+}
+
+TEST_CASE("Dual::-=") {
+    Ibis::dual x{3.0, 1.0};
+    Ibis::dual y{2.0, 3.0};
+    x -= y;
+
+    CHECK(x.real() == doctest::Approx(1.0));
+    CHECK(x.dual() == doctest::Approx(-2.0));
 }
 
 TEST_CASE("Dual::subtract_real") {
@@ -55,6 +73,15 @@ TEST_CASE("Dual::multiplicaton") {
     CHECK(d.dual() == doctest::Approx(11.0));
 }
 
+TEST_CASE("Dual::*=") {
+    Ibis::dual x{3.0, 1.0};
+    Ibis::dual y{2.0, 3.0};
+    x *= y;
+    
+    CHECK(x.real() == doctest::Approx(6.0));
+    CHECK(x.dual() == doctest::Approx(11.0));
+}
+
 TEST_CASE("Dual::dual_multiply_real") {
     Ibis::dual x{3.0, 1.0};
     Ibis::real y = 2.0;
@@ -62,6 +89,15 @@ TEST_CASE("Dual::dual_multiply_real") {
 
     CHECK(d.real() == doctest::Approx(6.0));
     CHECK(d.dual() == doctest::Approx(2.0));
+}
+
+TEST_CASE("Dual::dual_multiply_eq_real") {
+    Ibis::dual x{3.0, 1.0};
+    Ibis::real y = 2.0;
+    x *= y;
+
+    CHECK(x.real() == doctest::Approx(6.0));
+    CHECK(x.dual() == doctest::Approx(2.0));
 }
 
 TEST_CASE("Dual::real_multiply_dual") {
@@ -82,6 +118,15 @@ TEST_CASE("Dual::division") {
     CHECK(d.dual() == doctest::Approx(-1.75));
 }
 
+TEST_CASE("Dual::/=") {
+    Ibis::dual x{3.0, 1.0};
+    Ibis::dual y{2.0, 3.0};
+    x /= y;
+
+    CHECK(x.real() == doctest::Approx(1.5));
+    CHECK(x.dual() == doctest::Approx(-1.75));
+}
+
 TEST_CASE("Dual::dual_divde_real") {
     Ibis::dual x{3.0, 1.0};
     Ibis::real y = 2.0;
@@ -89,6 +134,15 @@ TEST_CASE("Dual::dual_divde_real") {
 
     CHECK(d.real() == doctest::Approx(1.5));
     CHECK(d.dual() == doctest::Approx(0.5));
+}
+
+TEST_CASE("Dual::dual_divde_eq_real") {
+    Ibis::dual x{3.0, 1.0};
+    Ibis::real y = 2.0;
+    x /= y;
+
+    CHECK(x.real() == doctest::Approx(1.5));
+    CHECK(x.dual() == doctest::Approx(0.5));
 }
 
 TEST_CASE("Dual::real_divde_dual") {
@@ -114,7 +168,7 @@ TEST_CASE("Dual::greater") {
     CHECK_GT(x, y);
 }
 
-TEST_CASE("Dual::greater") {
+TEST_CASE("Dual::lesser") {
     Ibis::dual x{3.0, 1.0};
     Ibis::dual y{2.0, 3.0};
     CHECK_LT(y, x);
@@ -132,4 +186,36 @@ TEST_CASE("Dual::x^2-sqrt(x)") {
     auto y = x * x - Ibis::sqrt(x);
     CHECK(y.real() == doctest::Approx(78.0));
     CHECK(y.dual() == doctest::Approx(18.0 - 1.0 / 6.0));
+}
+
+TEST_CASE("Dual::diff_abs") {
+    Ibis::dual x{-1.0, 1.0};
+    Ibis::dual y = Ibis::abs(x);
+
+    CHECK(y.real() == doctest::Approx(1.0));
+    CHECK(y.dual() == doctest::Approx(-1.0));
+}
+
+TEST_CASE("Dual::diff_abs_2") {
+    Ibis::dual x{1.0, 1.0};
+    Ibis::dual y = Ibis::abs(x);
+
+    CHECK(y.real() == doctest::Approx(1.0));
+    CHECK(y.dual() == doctest::Approx(1.0));
+}
+
+TEST_CASE("Dual::abs(x^2)") {
+    Ibis::dual x{-1.0, 1.0};
+    Ibis::dual y = Ibis::abs(x * x);
+
+    CHECK(y.real() == doctest::Approx(1.0));
+    CHECK(y.dual() == doctest::Approx(-2.0));
+}
+
+TEST_CASE("Dual::abs(x^2)_2") {
+    Ibis::dual x{1.0, 1.0};
+    Ibis::dual y = Ibis::abs(x * x);
+
+    CHECK(y.real() == doctest::Approx(1.0));
+    CHECK(y.dual() == doctest::Approx(2.0));
 }

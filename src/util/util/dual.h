@@ -153,8 +153,8 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     Dual<T>& operator*=(const Dual<T>& other) {
-        this->real_ *= other.real_;
         this->dual_ = this->real_ * other.dual_ + this->dual_ * other.real_;
+        this->real_ *= other.real_;
         return *this;
     }
 
@@ -185,9 +185,9 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     Dual<T>& operator/=(const Dual<T>& other) {
+        this->dual_ = (this->dual_ * other.real_ - this->real_ * other.dual_) /
+                      (other.real_ * other.real_);
         this->real_ /= other.real_;
-        this->dual_ = (this->dual_ * other->real_ - this->real_ * other.dual_) /
-                      (other.dual_ * other.dual_);
         return *this;
     }
 
@@ -212,7 +212,10 @@ public:
     T& dual() { return this->dual_; }
 
     KOKKOS_INLINE_FUNCTION
-    T abs() const { return Kokkos::abs(real_); }
+    Dual<T> abs() const {
+        return (real_ < T(0.0)) ? -(*this) : *this;
+    }
+
 
     KOKKOS_INLINE_FUNCTION
     Dual<T> conjugate() const { return Dual<T>{this->real_, -this->dual_}; }
