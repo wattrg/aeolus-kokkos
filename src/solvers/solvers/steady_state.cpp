@@ -193,13 +193,13 @@ void SteadyState::print_progress(unsigned int step, Ibis::real wc) {
 
 bool SteadyState::stop_now(unsigned int step) {
     if (step >= max_step() - 1) return true;
-    if (jfnk_.residual_norms().global() < jfnk_.target_residual()) return true;
+    if (jfnk_.relative_residual_norms().global() < jfnk_.target_residual()) return true;
     return false;
 }
 
 std::string SteadyState::stop_reason(unsigned int step) {
     if (step >= max_step() - 1) return "reached max_step";
-    if (jfnk_.residual_norms().global() < jfnk_.target_residual()) {
+    if (jfnk_.relative_residual_norms().global() < jfnk_.target_residual()) {
         return "reached target residual";
     }
     return "Shouldn't reach here";
