@@ -15,18 +15,19 @@ flow_state = FlowState(gas=gas_state, vx=vx)
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator = Hanel(),
-    reconstruction_order = 1,
+    reconstruction_order = 2,
     limiter = Unlimited()
 )
 
 config.gas_model = gas_model
 
 config.solver = SteadyState(
-    cfl=0.5,
-    max_steps=100,
-    plot_frequency=10,
+    cfl=10.0,
+    max_steps=1000,
+    plot_frequency=100,
     print_frequency=10,
-    linear_solver=Gmres(tol=1e-10, max_iters=100)
+    tolerance=1e-10,
+    linear_solver=Gmres(tol=1e-1, max_iters=100)
 )
 
 config.grid = Block(
