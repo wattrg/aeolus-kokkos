@@ -212,10 +212,7 @@ public:
     T& dual() { return this->dual_; }
 
     KOKKOS_INLINE_FUNCTION
-    Dual<T> abs() const {
-        return (real_ < T(0.0)) ? -(*this) : *this;
-    }
-
+    Dual<T> abs() const { return (real_ < T(0.0)) ? -(*this) : *this; }
 
     KOKKOS_INLINE_FUNCTION
     Dual<T> conjugate() const { return Dual<T>{this->real_, -this->dual_}; }

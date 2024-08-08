@@ -2,6 +2,7 @@
 #include <finite_volume/gradient.h>
 #include <spdlog/spdlog.h>
 #include <util/numeric_types.h>
+
 #include <stdexcept>
 
 std::string string_from_reconstruction_vars(ThermoReconstructionVars vars) {

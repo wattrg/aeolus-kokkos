@@ -53,7 +53,6 @@ int Solver::solve() {
             print_progress(step, sw.elapsed().count());
         }
 
-
         if (plot_this_step(step)) {
             plot_solution(step);
         }

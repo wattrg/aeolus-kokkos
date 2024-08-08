@@ -77,8 +77,8 @@ public:
            std::shared_ptr<LinearSystem> precondition_system,
            const size_t max_precondition_iters, Ibis::real inner_tol);
 
-    FGmres(std::shared_ptr<LinearSystem> system, std::shared_ptr<LinearSystem> preconditioner,
-           json config);
+    FGmres(std::shared_ptr<LinearSystem> system,
+           std::shared_ptr<LinearSystem> preconditioner, json config);
 
     GmresResult solve(std::shared_ptr<LinearSystem> system, Ibis::Vector<Ibis::real>& x);
 

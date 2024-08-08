@@ -77,7 +77,7 @@ TEST_CASE("Dual::*=") {
     Ibis::dual x{3.0, 1.0};
     Ibis::dual y{2.0, 3.0};
     x *= y;
-    
+
     CHECK(x.real() == doctest::Approx(6.0));
     CHECK(x.dual() == doctest::Approx(11.0));
 }

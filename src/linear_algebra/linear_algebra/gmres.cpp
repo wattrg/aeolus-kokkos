@@ -135,7 +135,6 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
     Ibis::scale(r0_, v_, 1.0 / beta);
     krylov_vectors_.column(0).deep_copy_layout(v_);
 
-
     GmresResult result{false, 0, tol_, beta};
     for (size_t j = 0; j < max_iters_; j++) {
         // build the next krylov vector and entries in the Hessenberg matrix
@@ -180,9 +179,8 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
     return result;
 }
 
-
-FGmres::FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters, Ibis::real tol,
-               std::shared_ptr<LinearSystem> precondition_system,
+FGmres::FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
+               Ibis::real tol, std::shared_ptr<LinearSystem> precondition_system,
                const size_t max_precondition_iters, Ibis::real precondition_tol) {
     tol_ = tol;
     num_vars_ = system->num_vars();
@@ -217,8 +215,8 @@ FGmres::FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters, Ibi
     z_ = Ibis::Vector<Ibis::real>("FFGmres::z", num_vars_);
 
     // Inner gmres
-    preconditioner_ = Gmres(precondition_system, max_precondition_iters,
-                            precondition_tol);
+    preconditioner_ =
+        Gmres(precondition_system, max_precondition_iters, precondition_tol);
 }
 
 FGmres::FGmres(std::shared_ptr<LinearSystem> system,
@@ -254,7 +252,7 @@ GmresResult FGmres::solve(std::shared_ptr<LinearSystem> system,
         system->set_rhs(v_);
         preconditioner_.solve(system, z_);
         preconditioned_krylov_vectors_.column(j).deep_copy_layout(z_);
-        
+
         // build the next krylov vector and entries in the Hessenberg matrix
         system->matrix_vector_product(z_, w_);
         for (size_t i = 0; i < j + 1; i++) {
@@ -400,9 +398,7 @@ TEST_CASE("FGMRES") {
 
         void eval_rhs() {}
 
-        void set_rhs(Ibis::Vector<Ibis::real>& rhs) {
-            rhs_.deep_copy_space(rhs);
-        }
+        void set_rhs(Ibis::Vector<Ibis::real>& rhs) { rhs_.deep_copy_space(rhs); }
 
         void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                    Ibis::Vector<Ibis::real>& res) {
@@ -427,8 +423,7 @@ TEST_CASE("FGMRES") {
         Ibis::Vector<Ibis::real, ExecSpace> rhs_;
     };
 
-
-    Ibis::Matrix<Ibis::real> matrix ("A", 5, 5);
+    Ibis::Matrix<Ibis::real> matrix("A", 5, 5);
     auto matrix_h = matrix.host_mirror();
     matrix_h(0, 0) = 2.0;
     matrix_h(0, 1) = -1.0;
@@ -445,11 +440,10 @@ TEST_CASE("FGMRES") {
     matrix_h(4, 4) = 2.0;
     matrix.deep_copy_space(matrix_h);
 
-
     std::shared_ptr<LinearSystem> sys{new TestLinearSystem(matrix)};
 
     // the preconditioner we'll use is just the diagonal terms
-    Ibis::Matrix<Ibis::real> precondition_matrix ("P", 5, 5);
+    Ibis::Matrix<Ibis::real> precondition_matrix("P", 5, 5);
     auto preconditioner_h = precondition_matrix.host_mirror();
     matrix_h(0, 0) = 2.0;
     matrix_h(1, 1) = 2.0;
@@ -457,7 +451,8 @@ TEST_CASE("FGMRES") {
     matrix_h(3, 3) = 2.0;
     matrix_h(4, 4) = 2.0;
     precondition_matrix.deep_copy_space(preconditioner_h);
-    std::shared_ptr<LinearSystem> preconditioner{new TestLinearSystem(precondition_matrix)};
+    std::shared_ptr<LinearSystem> preconditioner{
+        new TestLinearSystem(precondition_matrix)};
 
     FGmres solver{sys, 5, 1e-14, preconditioner, 2, 1e-1};
     Ibis::Vector<Ibis::real> x{"x", 5};
