@@ -26,8 +26,9 @@ public:
 
     int initialise();
 
-    GmresResult step(std::shared_ptr<Sim<Ibis::dual>>& sim,
-                     ConservedQuantities<Ibis::dual>& cq, FlowStates<Ibis::dual>& fs);
+    LinearSolveResult step(std::shared_ptr<Sim<Ibis::dual>>& sim,
+                           ConservedQuantities<Ibis::dual>& cq,
+                           FlowStates<Ibis::dual>& fs);
 
     void solve(std::shared_ptr<Sim<Ibis::dual>>& sim);
 
@@ -43,7 +44,7 @@ public:
 
     Ibis::real target_residual() const { return tolerance_; }
 
-    const GmresResult& last_gmres_result() const { return last_gmres_result_; }
+    const LinearSolveResult& last_gmres_result() const { return last_gmres_result_; }
 
 private:
     std::shared_ptr<PseudoTransientLinearSystem> system_;
@@ -58,7 +59,7 @@ private:
     std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals_;
     ConservedQuantitiesNorm<Ibis::dual> residual_norms_;
     ConservedQuantitiesNorm<Ibis::dual> initial_residual_norms_;
-    GmresResult last_gmres_result_;
+    LinearSolveResult last_gmres_result_;
 
 public:  // this is public to appease NVCC
     void apply_update_(std::shared_ptr<Sim<Ibis::dual>>& sim,

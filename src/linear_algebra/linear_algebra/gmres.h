@@ -12,9 +12,9 @@
 
 using json = nlohmann::json;
 
-struct GmresResult {
-    GmresResult();
-    GmresResult(bool success, size_t n_iters, Ibis::real tol, Ibis::real residual);
+struct LinearSolveResult {
+    LinearSolveResult();
+    LinearSolveResult(bool success, size_t n_iters, Ibis::real tol, Ibis::real residual);
 
     bool success;
     size_t n_iters;
@@ -22,7 +22,15 @@ struct GmresResult {
     Ibis::real residual;
 };
 
-class Gmres {
+class IterativeLinearSolver {
+public:
+    IterativeLinearSolver() {}
+    virtual ~IterativeLinearSolver() {}
+
+    virtual LinearSolveResult solve(Ibis::Vector<Ibis::real>& x) = 0;
+};
+
+class Gmres : public IterativeLinearSolver {
 public:
     using MemSpace = Ibis::DefaultMemSpace;
     using HostMemSpace = Ibis::DefaultHostMemSpace;
@@ -33,17 +41,20 @@ public:
 public:
     Gmres() {}
 
+    ~Gmres() {}
+
     Gmres(std::shared_ptr<LinearSystem> system, const size_t max_iters, Ibis::real tol);
 
     Gmres(std::shared_ptr<LinearSystem> system, json config);
 
-    GmresResult solve(std::shared_ptr<LinearSystem> system, Ibis::Vector<Ibis::real>& x0);
+    LinearSolveResult solve(Ibis::Vector<Ibis::real>& x0);
 
 private:
     // configuration
     size_t max_iters_;
     size_t num_vars_;
     Ibis::real tol_;
+    std::shared_ptr<LinearSystem> system_;
 
 public:  // this has to be public to access from inside kernels
     // memory
@@ -66,12 +77,14 @@ public:  // this has to be public to access from inside kernels
     Ibis::Vector<Ibis::real, HostExecSpace> h_rotated_;
 };
 
-class FGmres {
+class FGmres : public IterativeLinearSolver {
 public:
     using HostExecSpace = Ibis::DefaultHostExecSpace;
 
 public:
     FGmres() {}
+
+    ~FGmres() {}
 
     FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters, Ibis::real tol,
            std::shared_ptr<LinearSystem> precondition_system,
@@ -80,13 +93,16 @@ public:
     FGmres(std::shared_ptr<LinearSystem> system,
            std::shared_ptr<LinearSystem> preconditioner, json config);
 
-    GmresResult solve(std::shared_ptr<LinearSystem> system, Ibis::Vector<Ibis::real>& x);
+    LinearSolveResult solve(Ibis::Vector<Ibis::real>& x);
 
 private:
     // configuration
     size_t max_iters_;
     size_t num_vars_;
     Ibis::real tol_;
+
+    std::shared_ptr<LinearSystem> system_;
+    std::shared_ptr<LinearSystem> precondition_system_;
 
     // the inner gmres
     Gmres preconditioner_;

@@ -21,8 +21,9 @@ int Jfnk::initialise() {
     return 0;
 }
 
-GmresResult Jfnk::step(std::shared_ptr<Sim<Ibis::dual>>& sim,
-                       ConservedQuantities<Ibis::dual>& cq, FlowStates<Ibis::dual>& fs) {
+LinearSolveResult Jfnk::step(std::shared_ptr<Sim<Ibis::dual>>& sim,
+                             ConservedQuantities<Ibis::dual>& cq,
+                             FlowStates<Ibis::dual>& fs) {
     // dU is the change in the solution for the step,
     // our initial guess for it is zero
     dU_.zero();
@@ -33,7 +34,7 @@ GmresResult Jfnk::step(std::shared_ptr<Sim<Ibis::dual>>& sim,
     system_->set_pseudo_time_step(cfl * stable_dt_);
 
     // solve the linear system of equations
-    last_gmres_result_ = gmres_.solve(system_, dU_);
+    last_gmres_result_ = gmres_.solve(dU_);
 
     // apply the update and calculate the new residuals
     // so we can check non-linear convergence.

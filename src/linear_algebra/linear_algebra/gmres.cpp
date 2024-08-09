@@ -72,11 +72,11 @@ void apply_rotations_to_hessenberg_(Ibis::Matrix<Ibis::real, HostExecSpace> H0,
     H_old.deep_copy(H_new);
 }
 
-GmresResult::GmresResult(bool success_, size_t n_iters_, Ibis::real tol_,
-                         Ibis::real residual_)
+LinearSolveResult::LinearSolveResult(bool success_, size_t n_iters_, Ibis::real tol_,
+                                     Ibis::real residual_)
     : success(success_), n_iters(n_iters_), tol(tol_), residual(residual_) {}
 
-GmresResult::GmresResult() : GmresResult(false, 0, -1.0, -1.0) {}
+LinearSolveResult::LinearSolveResult() : LinearSolveResult(false, 0, -1.0, -1.0) {}
 
 Gmres::Gmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
              Ibis::real tol) {
@@ -108,13 +108,14 @@ Gmres::Gmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
     r0_ = Ibis::Vector<Ibis::real>("Gmres::r0", num_vars_);
     w_ = Ibis::Vector<Ibis::real>("Gmres::w", num_vars_);
     v_ = Ibis::Vector<Ibis::real>("Gmres::v", num_vars_);
+
+    system_ = system;
 }
 
 Gmres::Gmres(std::shared_ptr<LinearSystem> system, json config)
     : Gmres(system, config.at("max_iters"), config.at("tol")) {}
 
-GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
-                         Ibis::Vector<Ibis::real>& x0) {
+LinearSolveResult Gmres::solve(Ibis::Vector<Ibis::real>& x0) {
     // zero out (or set to identity matrix) memory
     Q0_.set_to_identity();
     Q1_.set_to_identity();
@@ -125,20 +126,20 @@ GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
     g1_.zero();
 
     // initialise the intial residuals and first krylov vector
-    compute_r0_(system, x0, r0_, w_);
+    compute_r0_(system_, x0, r0_, w_);
     Ibis::real beta = Ibis::norm2(r0_);
     if (beta < tol_) {
         // the initial guess is within the tolerance
-        return GmresResult{true, 0, tol_, beta};
+        return LinearSolveResult{true, 0, tol_, beta};
     }
     g0_(0) = beta;
     Ibis::scale(r0_, v_, 1.0 / beta);
     krylov_vectors_.column(0).deep_copy_layout(v_);
 
-    GmresResult result{false, 0, tol_, beta};
+    LinearSolveResult result{false, 0, tol_, beta};
     for (size_t j = 0; j < max_iters_; j++) {
         // build the next krylov vector and entries in the Hessenberg matrix
-        system->matrix_vector_product(v_, w_);
+        system_->matrix_vector_product(v_, w_);
         for (size_t i = 0; i < j + 1; i++) {
             auto vi = krylov_vectors_.column(i);
             H0_(i, j) = Ibis::dot(w_, vi);
@@ -214,7 +215,11 @@ FGmres::FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
     v_ = Ibis::Vector<Ibis::real>("FGmres::v", num_vars_);
     z_ = Ibis::Vector<Ibis::real>("FFGmres::z", num_vars_);
 
-    // Inner gmres
+    // The linear system of equations
+    system_ = system;
+
+    // The preconditioner system of equations, and gmres to solve it
+    precondition_system_ = precondition_system;
     preconditioner_ =
         Gmres(precondition_system, max_precondition_iters, precondition_tol);
 }
@@ -224,8 +229,7 @@ FGmres::FGmres(std::shared_ptr<LinearSystem> system,
     : FGmres(system, config.at("max_iters"), config.at("tol"), preconditioner,
              config.at("max_precondition_iters"), config.at("precondition_tol")) {}
 
-GmresResult FGmres::solve(std::shared_ptr<LinearSystem> system,
-                          Ibis::Vector<Ibis::real>& x) {
+LinearSolveResult FGmres::solve(Ibis::Vector<Ibis::real>& x) {
     // zero out (or set to identity matrix) memory
     Q0_.set_to_identity();
     Q1_.set_to_identity();
@@ -236,25 +240,25 @@ GmresResult FGmres::solve(std::shared_ptr<LinearSystem> system,
     g1_.zero();
 
     // initialise the intial residuals and first krylov vector
-    compute_r0_(system, x, r0_, w_);
+    compute_r0_(system_, x, r0_, w_);
     Ibis::real beta = Ibis::norm2(r0_);
     if (beta < tol_) {
         // the initial guess is within the tolerance
-        return GmresResult{true, 0, tol_, beta};
+        return LinearSolveResult{true, 0, tol_, beta};
     }
     g0_(0) = beta;
     Ibis::scale(r0_, v_, 1.0 / beta);
     krylov_vectors_.column(0).deep_copy_layout(v_);
 
-    GmresResult result{false, 0, tol_, beta};
+    LinearSolveResult result{false, 0, tol_, beta};
     for (size_t j = 0; j < max_iters_; j++) {
         // solve the precondition system
-        system->set_rhs(v_);
-        preconditioner_.solve(system, z_);
+        precondition_system_->set_rhs(v_);
+        preconditioner_.solve(z_);
         preconditioned_krylov_vectors_.column(j).deep_copy_layout(z_);
 
         // build the next krylov vector and entries in the Hessenberg matrix
-        system->matrix_vector_product(z_, w_);
+        system_->matrix_vector_product(z_, w_);
         for (size_t i = 0; i < j + 1; i++) {
             auto vi = krylov_vectors_.column(i);
             H0_(i, j) = Ibis::dot(w_, vi);
@@ -364,7 +368,7 @@ TEST_CASE("GMRES") {
 
     Gmres solver{sys, 5, 1e-14};
     Ibis::Vector<Ibis::real> x{"x", 5};
-    GmresResult result = solver.solve(sys, x);
+    LinearSolveResult result = solver.solve(x);
 
     auto x_h = x.host_mirror();
     x_h.deep_copy_space(x);
@@ -456,7 +460,7 @@ TEST_CASE("FGMRES") {
 
     FGmres solver{sys, 5, 1e-14, preconditioner, 2, 1e-1};
     Ibis::Vector<Ibis::real> x{"x", 5};
-    GmresResult result = solver.solve(sys, x);
+    LinearSolveResult result = solver.solve(x);
 
     auto x_h = x.host_mirror();
     x_h.deep_copy_space(x);

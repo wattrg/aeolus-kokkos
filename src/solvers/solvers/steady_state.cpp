@@ -219,7 +219,7 @@ bool SteadyState::write_residuals(unsigned int step) {
                                          std::ios_base::app);
     rel_norms.write_to_file(relative_residual_file, (Ibis::real)step, step);
 
-    const GmresResult& gmres_result = jfnk_.last_gmres_result();
+    const LinearSolveResult& gmres_result = jfnk_.last_gmres_result();
     std::ofstream gmres_diagnostics("log/gmres_diagnostics.dat", std::ios_base::app);
     gmres_diagnostics << step << " " << gmres_result.success << " "
                       << gmres_result.residual << " " << gmres_result.tol << " "
