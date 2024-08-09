@@ -449,11 +449,11 @@ TEST_CASE("FGMRES") {
     // the preconditioner we'll use is just the diagonal terms
     Ibis::Matrix<Ibis::real> precondition_matrix("P", 5, 5);
     auto preconditioner_h = precondition_matrix.host_mirror();
-    matrix_h(0, 0) = 2.0;
-    matrix_h(1, 1) = 2.0;
-    matrix_h(2, 2) = 2.0;
-    matrix_h(3, 3) = 2.0;
-    matrix_h(4, 4) = 2.0;
+    preconditioner_h(0, 0) = 2.0;
+    preconditioner_h(1, 1) = 2.0;
+    preconditioner_h(2, 2) = 2.0;
+    preconditioner_h(3, 3) = 2.0;
+    preconditioner_h(4, 4) = 2.0;
     precondition_matrix.deep_copy_space(preconditioner_h);
     std::shared_ptr<LinearSystem> preconditioner{
         new TestLinearSystem(precondition_matrix)};
