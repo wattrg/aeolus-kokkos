@@ -49,7 +49,7 @@ public:
 private:
     std::shared_ptr<PseudoTransientLinearSystem> system_;
     std::unique_ptr<CflSchedule> cfl_;
-    Gmres gmres_;
+    std::unique_ptr<IterativeLinearSolver> gmres_;
     Ibis::Vector<Ibis::real> dU_;
 
     size_t max_steps_;
