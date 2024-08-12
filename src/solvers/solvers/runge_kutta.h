@@ -74,7 +74,7 @@ private:
     // implementation
     int initialise();
     int finalise();
-    int take_step();
+    int take_step(size_t step);
     void estimate_dt();
     bool print_this_step(unsigned int step);
     bool plot_this_step(unsigned int step);

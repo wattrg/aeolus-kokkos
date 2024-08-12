@@ -26,7 +26,7 @@ protected:
     // the main parts of the solver
     virtual int initialise() = 0;
     virtual int finalise() = 0;
-    virtual int take_step() = 0;
+    virtual int take_step(size_t step) = 0;
 
     // some io utilities
     virtual bool print_this_step(unsigned int step) = 0;

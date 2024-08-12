@@ -23,7 +23,7 @@ int Solver::solve() {
     }
     spdlog::stopwatch sw;
     for (size_t step = 0; step < max_step(); step++) {
-        int result = take_step();
+        int result = take_step(step);
 
         if (residuals_this_step(step)) {
             write_residuals(step);

@@ -165,8 +165,8 @@ int SteadyState::initialise() {
 
 int SteadyState::finalise() { return 0; }
 
-int SteadyState::take_step() {
-    jfnk_.step(sim_, *cq_, *fs_);
+int SteadyState::take_step(size_t step) {
+    jfnk_.step(sim_, *cq_, *fs_, step);
     return 0;
 }
 
@@ -193,8 +193,10 @@ int SteadyState::plot_solution(unsigned int step) {
 
 void SteadyState::print_progress(unsigned int step, Ibis::real wc) {
     Ibis::real relative_global_residual = jfnk_.relative_residual_norms().global().real();
-    spdlog::info("  step: {:>8}, relative global residual {:.6e}, wc = {:.1f}s", step,
-                 relative_global_residual, wc);
+    Ibis::real cfl = jfnk_.cfl(step);
+    spdlog::info(
+        "  step: {:>8}, relative global residual {:.2e}, cfl = {:.1f}, wc = {:.1f}s",
+        step, relative_global_residual, cfl, wc);
 }
 
 bool SteadyState::stop_now(unsigned int step) {

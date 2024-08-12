@@ -103,7 +103,7 @@ private:
     // implementation
     int initialise();
     int finalise();
-    int take_step();
+    int take_step(size_t step);
     bool print_this_step(unsigned int step);
     bool residuals_this_step(unsigned int step);
     bool plot_this_step(unsigned int step);

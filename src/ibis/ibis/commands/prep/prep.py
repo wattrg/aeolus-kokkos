@@ -524,12 +524,9 @@ class ConstantCfl(CflSchedule):
 class LinearInterpolateCfl(CflSchedule):
     _type = "linear_interpolate"
 
-    def __init__(self, cfls):
-        self._times = []
-        self._cfls = []
-        for time, cfl in cfls:
-            self._times.append(time)
-            self._cfls.append(cfl)
+    def __init__(self, times, cfls):
+        self._times = times
+        self._cfls = cfls
 
     def as_dict(self):
         return {
@@ -540,6 +537,9 @@ class LinearInterpolateCfl(CflSchedule):
 
 
 def make_cfl_schedule(config):
+    if isinstance(config, CflSchedule):
+        return config
+
     if type(config) is float:
         return ConstantCfl(config)
 
@@ -934,6 +934,7 @@ def main(file_name, res_dir):
         "GasState": GasState,
         "GasModel": GasModel,
         "IdealGas": IdealGas,
+        "LinearInterpolateCfl": LinearInterpolateCfl,
         "RungeKutta": RungeKutta,
         "SteadyState": SteadyState,
         "Gmres": Gmres,

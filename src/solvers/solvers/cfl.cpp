@@ -32,7 +32,7 @@ Ibis::real LinearSchedule::eval(Ibis::real t) {
 
     Ibis::real cfl;
     for (size_t i = 0; i < times_.size(); i++) {
-        if (t > times_[i] && t < times_[i + 1]) {
+        if (t >= times_[i] && t < times_[i + 1]) {
             Ibis::real frac = (t - times_[i]) / (times_[i + 1] - times_[i]);
             cfl = cfls_[i] + frac * (cfls_[i + 1] - cfls_[i]);
             return cfl;
@@ -46,7 +46,7 @@ std::unique_ptr<CflSchedule> make_cfl_schedule(json config) {
     if (type == "constant") {
         return std::unique_ptr<CflSchedule>(new ConstantSchedule(config.at("value")));
     } else if (type == "linear_interpolate") {
-        return std::unique_ptr<CflSchedule>(new LinearSchedule(config.at("schedule")));
+        return std::unique_ptr<CflSchedule>(new LinearSchedule(config));
     } else {
         spdlog::error("Unkown CFL schedule {}", type);
         throw std::runtime_error("Unknown CFL schedule");

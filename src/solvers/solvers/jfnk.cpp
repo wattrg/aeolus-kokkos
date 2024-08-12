@@ -37,13 +37,13 @@ void Jfnk::set_pseudo_time_step_size(Ibis::real dt_star) {
 
 LinearSolveResult Jfnk::step(std::shared_ptr<Sim<Ibis::dual>>& sim,
                              ConservedQuantities<Ibis::dual>& cq,
-                             FlowStates<Ibis::dual>& fs) {
+                             FlowStates<Ibis::dual>& fs, size_t step) {
     // dU is the change in the solution for the step,
     // our initial guess for it is zero
     dU_.zero();
 
     // set the time step
-    Ibis::real cfl = cfl_->eval(0.0);
+    Ibis::real cfl = cfl_->eval((Ibis::real)step);
     stable_dt_ = sim->fv.estimate_dt(fs, sim->grid, sim->gas_model, sim->trans_prop);
     set_pseudo_time_step_size(cfl * stable_dt_);
 

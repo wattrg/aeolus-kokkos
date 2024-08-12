@@ -28,13 +28,15 @@ public:
 
     LinearSolveResult step(std::shared_ptr<Sim<Ibis::dual>>& sim,
                            ConservedQuantities<Ibis::dual>& cq,
-                           FlowStates<Ibis::dual>& fs);
+                           FlowStates<Ibis::dual>& fs, size_t step);
 
     void solve(std::shared_ptr<Sim<Ibis::dual>>& sim);
 
     size_t max_steps() const { return max_steps_; }
 
     Ibis::real pseudo_time_step_size() const { return stable_dt_; }
+
+    Ibis::real cfl(size_t step) const { return cfl_->eval((Ibis::real)step); }
 
     ConservedQuantitiesNorm<Ibis::dual> residual_norms() const { return residual_norms_; }
 

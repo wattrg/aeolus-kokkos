@@ -99,7 +99,8 @@ void RungeKutta::estimate_dt() {
     }
 }
 
-int RungeKutta::take_step() {
+int RungeKutta::take_step(size_t step) {
+    (void)step;
     // this has to be done before the estimation of dt, as may set
     // values used to estimate the stable time step. It also serves
     // as the first stage of all the runge-kutta schemes
