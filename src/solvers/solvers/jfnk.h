@@ -63,6 +63,7 @@ private:
     ConservedQuantitiesNorm<Ibis::dual> residual_norms_;
     ConservedQuantitiesNorm<Ibis::dual> initial_residual_norms_;
     LinearSolveResult last_gmres_result_;
+    bool residual_based_cfl_;
 
     void set_pseudo_time_step_size(Ibis::real dt_star);
 

@@ -17,6 +17,7 @@ Jfnk::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
     gmres_ = make_linear_solver(system, preconditioner_, config.at("linear_solver"));
 
     cfl_ = std::move(cfl);
+    residual_based_cfl_ = cfl_->residual_based();
     dU_ = Ibis::Vector<Ibis::real>{"dU", system_->num_vars()};
     residuals_ = residuals;
 }
@@ -43,7 +44,13 @@ LinearSolveResult Jfnk::step(std::shared_ptr<Sim<Ibis::dual>>& sim,
     dU_.zero();
 
     // set the time step
-    Ibis::real cfl = cfl_->eval((Ibis::real)step);
+    Ibis::real cfl;
+    if (residual_based_cfl_) {
+        cfl = cfl_->eval(Ibis::real_part(relative_residual_norms().global()));
+    }
+    else {
+        cfl = cfl_->eval((Ibis::real)step);
+    }
     stable_dt_ = sim->fv.estimate_dt(fs, sim->grid, sim->gas_model, sim->trans_prop);
     set_pseudo_time_step_size(cfl * stable_dt_);
 

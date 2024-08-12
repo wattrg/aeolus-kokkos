@@ -536,6 +536,26 @@ class LinearInterpolateCfl(CflSchedule):
         }
 
 
+class ResidualBasedCfl(CflSchedule):
+    _type = "residual_based"
+    _json_values = ["growth_threshold", "power", "start_cfl", "max_cfl"]
+    __slots__ = _json_values
+    _defaults_file = "residual_based_cfl.json"
+
+    def __init__(self, **kwargs):
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
+        for key in json_data:
+            setattr(self, key, json_data[key])
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+
+    def as_dict(self):
+        dictionary = {"type": self._type}
+        for key in self._json_values:
+            dictionary[key] = getattr(self, key)
+        return dictionary
+
+
 def make_cfl_schedule(config):
     if isinstance(config, CflSchedule):
         return config
@@ -935,6 +955,7 @@ def main(file_name, res_dir):
         "GasModel": GasModel,
         "IdealGas": IdealGas,
         "LinearInterpolateCfl": LinearInterpolateCfl,
+        "ResidualBasedCfl": ResidualBasedCfl,
         "RungeKutta": RungeKutta,
         "SteadyState": SteadyState,
         "Gmres": Gmres,

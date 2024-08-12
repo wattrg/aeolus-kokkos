@@ -1,0 +1,6 @@
+{
+  "growth_threshold": 0.1,
+  "power": 0.8,
+  "start_cfl": 1.0,
+  "max_cfl": 1e8
+}
