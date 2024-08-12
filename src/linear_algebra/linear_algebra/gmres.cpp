@@ -300,23 +300,20 @@ LinearSolveResult FGmres::solve(Ibis::Vector<Ibis::real>& x) {
     return result;
 }
 
-
-std::unique_ptr<IterativeLinearSolver> make_linear_solver(std::shared_ptr<LinearSystem> system,
-                                                          json config) {
+std::unique_ptr<IterativeLinearSolver> make_linear_solver(
+    std::shared_ptr<LinearSystem> system, json config) {
     std::string solver_type = config.at("type");
     if (solver_type == "gmres") {
         return std::unique_ptr<IterativeLinearSolver>(new Gmres(system, config));
-    }
-    else if (solver_type == "fgmres") {
+    } else if (solver_type == "fgmres") {
         std::shared_ptr<LinearSystem> preconditiner = std::move(system->preconditioner());
-        return std::unique_ptr<IterativeLinearSolver>(new FGmres(system, preconditiner, config));
-    }
-    else {
+        return std::unique_ptr<IterativeLinearSolver>(
+            new FGmres(system, preconditiner, config));
+    } else {
         spdlog::error("Unknown linear solver {}", solver_type);
         throw new std::runtime_error("Unknown linear solver");
     }
 }
-
 
 TEST_CASE("GMRES") {
     class TestLinearSystem : public LinearSystem {
@@ -364,7 +361,9 @@ TEST_CASE("GMRES") {
             Ibis::gemv(matrix_, vec, res);
         }
 
-        std::unique_ptr<LinearSystem> preconditioner() {throw new std::runtime_error("");}
+        std::unique_ptr<LinearSystem> preconditioner() {
+            throw new std::runtime_error("");
+        }
 
         KOKKOS_INLINE_FUNCTION
         Ibis::real& rhs(const size_t i) const { return rhs_(i); }
@@ -430,7 +429,9 @@ TEST_CASE("FGMRES") {
             Ibis::gemv(matrix_, vec, res);
         }
 
-        std::unique_ptr<LinearSystem> preconditioner() {throw new std::runtime_error("");}
+        std::unique_ptr<LinearSystem> preconditioner() {
+            throw new std::runtime_error("");
+        }
 
         KOKKOS_INLINE_FUNCTION
         Ibis::real& rhs(const size_t i) const { return rhs_(i); }

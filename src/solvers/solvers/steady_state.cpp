@@ -12,8 +12,7 @@ SteadyStateLinearisation::SteadyStateLinearisation(
     std::shared_ptr<Sim<Ibis::dual>> sim,
     std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals,
     std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
-    std::shared_ptr<FlowStates<Ibis::dual>> fs,
-    bool allow_reconstruction) {
+    std::shared_ptr<FlowStates<Ibis::dual>> fs, bool allow_reconstruction) {
     sim_ = sim;
     cq_ = cq;
     fs_ = fs;
@@ -32,8 +31,8 @@ SteadyStateLinearisation::SteadyStateLinearisation(
 }
 
 std::unique_ptr<LinearSystem> SteadyStateLinearisation::preconditioner() {
-    return std::unique_ptr<LinearSystem> (new SteadyStateLinearisation(sim_, residuals_,
-                                                                   cq_, fs_, false));
+    return std::unique_ptr<LinearSystem>(
+        new SteadyStateLinearisation(sim_, residuals_, cq_, fs_, false));
 }
 
 void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& vec,

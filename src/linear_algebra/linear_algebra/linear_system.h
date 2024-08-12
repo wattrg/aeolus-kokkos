@@ -15,7 +15,7 @@ public:
                                        Ibis::Vector<Ibis::real>& result) = 0;
 
     virtual std::unique_ptr<LinearSystem> preconditioner() = 0;
-    
+
     virtual void eval_rhs() = 0;
 
     virtual void set_rhs(Ibis::Vector<Ibis::real>& rhs) = 0;
