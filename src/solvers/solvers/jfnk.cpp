@@ -9,9 +9,14 @@ Jfnk::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
            std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals, json config) {
     max_steps_ = config.at("max_steps");
     tolerance_ = config.at("tolerance");
-    gmres_ = make_linear_solver(system_, config.at("linear_solver"));
-    cfl_ = std::move(cfl);
+
     system_ = system;
+    std::shared_ptr<LinearSystem> preconditioner = system_->preconditioner();
+    preconditioner_ =
+        std::dynamic_pointer_cast<PseudoTransientLinearSystem>(preconditioner);
+    gmres_ = make_linear_solver(system, preconditioner_, config.at("linear_solver"));
+
+    cfl_ = std::move(cfl);
     dU_ = Ibis::Vector<Ibis::real>{"dU", system_->num_vars()};
     residuals_ = residuals;
 }
@@ -21,6 +26,13 @@ int Jfnk::initialise() {
     residual_norms_ = residuals_->L2_norms();
     initial_residual_norms_ = residual_norms_;
     return 0;
+}
+
+void Jfnk::set_pseudo_time_step_size(Ibis::real dt_star) {
+    system_->set_pseudo_time_step(dt_star);
+    if (preconditioner_) {
+        preconditioner_->set_pseudo_time_step(dt_star);
+    }
 }
 
 LinearSolveResult Jfnk::step(std::shared_ptr<Sim<Ibis::dual>>& sim,
@@ -33,7 +45,7 @@ LinearSolveResult Jfnk::step(std::shared_ptr<Sim<Ibis::dual>>& sim,
     // set the time step
     Ibis::real cfl = cfl_->eval(0.0);
     stable_dt_ = sim->fv.estimate_dt(fs, sim->grid, sim->gas_model, sim->trans_prop);
-    system_->set_pseudo_time_step(cfl * stable_dt_);
+    set_pseudo_time_step_size(cfl * stable_dt_);
 
     // solve the linear system of equations
     last_gmres_result_ = gmres_->solve(dU_);

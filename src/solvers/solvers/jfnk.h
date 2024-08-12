@@ -48,6 +48,7 @@ public:
 
 private:
     std::shared_ptr<PseudoTransientLinearSystem> system_;
+    std::shared_ptr<PseudoTransientLinearSystem> preconditioner_;
     std::unique_ptr<CflSchedule> cfl_;
     std::unique_ptr<IterativeLinearSolver> gmres_;
     Ibis::Vector<Ibis::real> dU_;
@@ -60,6 +61,8 @@ private:
     ConservedQuantitiesNorm<Ibis::dual> residual_norms_;
     ConservedQuantitiesNorm<Ibis::dual> initial_residual_norms_;
     LinearSolveResult last_gmres_result_;
+
+    void set_pseudo_time_step_size(Ibis::real dt_star);
 
 public:  // this is public to appease NVCC
     void apply_update_(std::shared_ptr<Sim<Ibis::dual>>& sim,

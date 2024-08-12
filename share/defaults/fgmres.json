@@ -1,0 +1,6 @@
+{
+  "max_iters": 50,
+  "max_preconditioner_iters": 5,
+  "preconditioner_tolerance": 1e-1,
+  "tolerance": 1e-2
+}

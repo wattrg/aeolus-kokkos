@@ -633,6 +633,7 @@ class RungeKutta:
 
 class Gmres:
     _json_values = ["max_iters", "tol"]
+    _type = "gmres"
     __slots__ = _json_values
     _defaults_file = "gmres.json"
 
@@ -646,7 +647,33 @@ class Gmres:
             setattr(self, key, kwargs[key])
 
     def as_dict(self):
-        dictionary = {}
+        dictionary = {"type": self._type}
+        for key in self._json_values:
+            dictionary[key] = getattr(self, key)
+        return dictionary
+
+    def validate(self):
+        return
+
+
+class FGmres:
+    _json_values = ["max_iters", "max_preconditioner_iters",
+                    "preconditioner_tolerance", "tolerance"]
+    _type = "fgmres"
+    __slots__ = _json_values
+    _defaults_file = "fgmres.json"
+
+    def __init__(self, **kwargs):
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
+
+        for key in json_data:
+            setattr(self, key, json_data[key])
+
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+
+    def as_dict(self):
+        dictionary = {"type": self._type}
         for key in self._json_values:
             dictionary[key] = getattr(self, key)
         return dictionary
@@ -910,6 +937,7 @@ def main(file_name, res_dir):
         "RungeKutta": RungeKutta,
         "SteadyState": SteadyState,
         "Gmres": Gmres,
+        "FGmres": FGmres,
         "IO": IO,
         "IOFormat": IOFormat,
         "supersonic_inflow": supersonic_inflow,
