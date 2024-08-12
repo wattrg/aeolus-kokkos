@@ -12,10 +12,12 @@ SteadyStateLinearisation::SteadyStateLinearisation(
     std::shared_ptr<Sim<Ibis::dual>> sim,
     std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals,
     std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
-    std::shared_ptr<FlowStates<Ibis::dual>> fs) {
+    std::shared_ptr<FlowStates<Ibis::dual>> fs,
+    bool allow_reconstruction) {
     sim_ = sim;
     cq_ = cq;
     fs_ = fs;
+    allow_reconstruction_ = allow_reconstruction;
 
     n_total_cells_ = sim_->grid.num_total_cells();
     n_cells_ = sim_->grid.num_cells();
@@ -27,6 +29,11 @@ SteadyStateLinearisation::SteadyStateLinearisation(
     fs_tmp_ = FlowStates<Ibis::dual>{n_total_cells_};
     cq_tmp_ = ConservedQuantities<Ibis::dual>{n_total_cells_, dim};
     residuals_ = residuals;
+}
+
+std::unique_ptr<LinearSystem> SteadyStateLinearisation::preconditioner() {
+    return std::unique_ptr<LinearSystem> (new SteadyStateLinearisation(sim_, residuals_,
+                                                                   cq_, fs_, false));
 }
 
 void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
@@ -51,7 +58,7 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
 
     // evaluate the residuals
     sim_->fv.compute_dudt(fs_tmp_, sim_->grid, residuals, sim_->gas_model,
-                          sim_->trans_prop);
+                          sim_->trans_prop, allow_reconstruction_);
 
     // set the components of vec to the dual component of dudt
     Kokkos::parallel_for(

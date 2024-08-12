@@ -1,13 +1,14 @@
 #include <finite_volume/conserved_quantities.h>
 #include <finite_volume/primative_conserved_conversion.h>
 #include <solvers/jfnk.h>
+#include "linear_algebra/gmres.h"
 
 Jfnk::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
            std::unique_ptr<CflSchedule>&& cfl,
            std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals, json config) {
     max_steps_ = config.at("max_steps");
     tolerance_ = config.at("tolerance");
-    gmres_ = Gmres(system, config.at("linear_solver"));
+    gmres_ = make_linear_solver(system_, config.at("linear_solver"));
     cfl_ = std::move(cfl);
     system_ = system;
     dU_ = Ibis::Vector<Ibis::real>{"dU", system_->num_vars()};
@@ -34,7 +35,7 @@ LinearSolveResult Jfnk::step(std::shared_ptr<Sim<Ibis::dual>>& sim,
     system_->set_pseudo_time_step(cfl * stable_dt_);
 
     // solve the linear system of equations
-    last_gmres_result_ = gmres_.solve(dU_);
+    last_gmres_result_ = gmres_->solve(dU_);
 
     // apply the update and calculate the new residuals
     // so we can check non-linear convergence.
