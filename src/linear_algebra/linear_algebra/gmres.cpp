@@ -158,9 +158,9 @@ LinearSolveResult Gmres::solve(Ibis::Vector<Ibis::real>& x0) {
 
         // check convergence
         Ibis::real residual = Ibis::abs(g0_(j + 1));
-        result.residual = residual;
+        result.residual = residual / beta;
         result.n_iters = j + 1;
-        if (residual < tol_) {
+        if (residual < tol_ * beta) {
             result.success = true;
             break;
         }
@@ -278,9 +278,9 @@ LinearSolveResult FGmres::solve(Ibis::Vector<Ibis::real>& x) {
 
         // check convergence
         Ibis::real residual = Ibis::abs(g0_(j + 1));
-        result.residual = residual;
+        result.residual = residual / beta;
         result.n_iters = j + 1;
-        if (residual < tol_) {
+        if (residual < tol_ * beta) {
             result.success = true;
             break;
         }
