@@ -53,11 +53,13 @@ ResidualBasedCfl::ResidualBasedCfl(json config)
 Ibis::real ResidualBasedCfl::eval(Ibis::real t) {
     if (t > threshold_) { 
         previous_residual_ = t;
-        return start_cfl_;
+        return previous_cfl_;
     }
-    Ibis::real ratio = t / previous_residual_;
+    // Ibis::real ratio = t / previous_residual_;
+    Ibis::real ratio = previous_residual_ / t;
     Ibis::real new_cfl = previous_cfl_ * Ibis::pow(ratio, power_);
     new_cfl = Ibis::min(new_cfl, max_cfl_);
+    new_cfl = Ibis::max(start_cfl_, new_cfl);
     previous_residual_ = t;
     previous_cfl_ = new_cfl;
     return new_cfl;

@@ -193,7 +193,7 @@ int SteadyState::plot_solution(unsigned int step) {
 
 void SteadyState::print_progress(unsigned int step, Ibis::real wc) {
     Ibis::real relative_global_residual = jfnk_.relative_residual_norms().global().real();
-    Ibis::real cfl = jfnk_.cfl(step);
+    Ibis::real cfl = jfnk_.calculate_cfl(step);
     spdlog::info(
         "  step: {:>8}, relative global residual {:.2e}, cfl = {:.1f}, wc = {:.1f}s",
         step, relative_global_residual, cfl, wc);

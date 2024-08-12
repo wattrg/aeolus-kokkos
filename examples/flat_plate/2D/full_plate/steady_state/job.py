@@ -18,15 +18,15 @@ config.gas_model = gas_model
 
 config.solver = SteadyState(
     # cfl=LinearInterpolateCfl(times=[0, 10, 100], cfls=[10.0, 10.0, 10000.0]),
-    cfl=ResidualBasedCfl(growth_threshold=1.0e3, power=0.90, start_cfl=1.0),
+    cfl=ResidualBasedCfl(growth_threshold=1000, power=0.95, start_cfl=1.0),
     max_steps=10000,
-    print_frequency=10,
-    plot_frequency=100,
+    print_frequency=50,
+    plot_frequency=500,
     diagnostics_frequency=1,
     tolerance=1e-10,
     linear_solver=FGmres(
         tolerance=1e-2,
-        max_iters=30,
+        max_iters=50,
         preconditioner_tolerance=1e-2,
         max_preconditioner_iters=10
     )
