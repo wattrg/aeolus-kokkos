@@ -83,7 +83,7 @@ public:
     KOKKOS_INLINE_FUNCTION
     T& energy() { return energy_; }
 
-    void write_to_file(std::ofstream& f, Ibis::real time, size_t step);
+    void write_to_file(std::ofstream& f, Ibis::real wc, Ibis::real time, size_t step);
 
 private:
     T global_;

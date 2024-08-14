@@ -2,9 +2,9 @@
 #include <util/numeric_types.h>
 
 template <typename T>
-void ConservedQuantitiesNorm<T>::write_to_file(std::ofstream& f, Ibis::real time,
-                                               size_t step) {
-    f << time << " " << step << " " << Ibis::real_part(global()) << " "
+void ConservedQuantitiesNorm<T>::write_to_file(std::ofstream& f, Ibis::real wc,
+                                               Ibis::real time, size_t step) {
+    f << time << " " << step << " " << wc << " " << Ibis::real_part(global()) << " "
       << Ibis::real_part(mass()) << " " << Ibis::real_part(momentum_x()) << " "
       << Ibis::real_part(momentum_y()) << " " << Ibis::real_part(momentum_z()) << " "
       << Ibis::real_part(energy()) << std::endl;

@@ -91,7 +91,7 @@ private:
     ConservedQuantitiesNorm<Ibis::real> L2_norms();
 
     bool residuals_this_step(unsigned int step);
-    bool write_residuals(unsigned int step);
+    bool write_residuals(unsigned int step, Ibis::real wc);
 
 private:
     // memory

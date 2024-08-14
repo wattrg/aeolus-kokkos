@@ -26,7 +26,7 @@ int Solver::solve() {
         int result = take_step(step);
 
         if (residuals_this_step(step)) {
-            write_residuals(step);
+            write_residuals(step, sw.elapsed().count());
         }
 
         if (result != 0) {

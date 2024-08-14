@@ -76,9 +76,9 @@ int RungeKutta::initialise() {
         {
             std::ofstream residual_file("log/residuals.dat", std::ios_base::out);
             residual_file
-                << "time step global mass momentum_x momentum_y momentum_z energy\n";
+                << "time step wall_clock global mass momentum_x momentum_y momentum_z energy\n";
         }
-        write_residuals(0);
+        write_residuals(0, 0.0);
     }
 
     return ic_result + conversion_result;
@@ -163,11 +163,11 @@ bool RungeKutta::residuals_this_step(unsigned int step) {
     return false;
 }
 
-bool RungeKutta::write_residuals(unsigned int step) {
+bool RungeKutta::write_residuals(unsigned int step, Ibis::real wc) {
     spdlog::debug("Writing residuals at step {}", step);
     ConservedQuantitiesNorm<Ibis::real> norms = L2_norms();
     std::ofstream residual_file("log/residuals.dat", std::ios_base::app);
-    norms.write_to_file(residual_file, t_, step);
+    norms.write_to_file(residual_file, wc, t_, step);
     time_since_last_residual_ = 0;
     return true;
 }

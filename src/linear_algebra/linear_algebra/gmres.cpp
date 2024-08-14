@@ -256,6 +256,7 @@ LinearSolveResult FGmres::solve(Ibis::Vector<Ibis::real>& x) {
     for (size_t j = 0; j < max_iters_; j++) {
         // solve the precondition system
         precondition_system_->set_rhs(v_);
+        z_.zero();
         preconditioner_.solve(z_);
         preconditioned_krylov_vectors_.column(j).deep_copy_layout(z_);
 

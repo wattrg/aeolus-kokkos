@@ -118,7 +118,7 @@ private:
         return sim_->fv.count_bad_cells(*fs_, sim_->grid.num_cells());
     }
 
-    bool write_residuals(unsigned int step);
+    bool write_residuals(unsigned int step, Ibis::real wc);
 
 private:
     // memory

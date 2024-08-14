@@ -147,14 +147,14 @@ int SteadyState::initialise() {
         // absolute residuals
         std::ofstream abs_residual_file("log/absolute_residuals.dat", std::ios_base::out);
         abs_residual_file
-            << "step step global mass momentum_x momentum_y momentum_z energy\n";
+            << "step step wall_clock global mass momentum_x momentum_y momentum_z energy\n";
 
         // relative residuals
         std::ofstream rel_residual_file("log/relative_residuals.dat", std::ios_base::out);
         rel_residual_file
-            << "step step global mass momentum_x momentum_y momentum_z energy\n";
+            << "step step wall_clock global mass momentum_x momentum_y momentum_z energy\n";
 
-        write_residuals(0);
+        write_residuals(0, 0.0);
 
         // gmres diagnostics
         std::ofstream gmres_diagnostics("log/gmres_diagnostics.dat", std::ios_base::out);
@@ -214,19 +214,19 @@ std::string SteadyState::stop_reason(unsigned int step) {
     return "Shouldn't reach here";
 }
 
-bool SteadyState::write_residuals(unsigned int step) {
+bool SteadyState::write_residuals(unsigned int step, Ibis::real wc) {
     spdlog::debug("Writing residuals at step {}", step);
 
     // the absolute residuals
     ConservedQuantitiesNorm<Ibis::dual> abs_norms = jfnk_.residual_norms();
     std::ofstream residual_file("log/absolute_residuals.dat", std::ios_base::app);
-    abs_norms.write_to_file(residual_file, (Ibis::real)step, step);
+    abs_norms.write_to_file(residual_file, wc, (Ibis::real)step, step);
 
     // the relative residuals
     ConservedQuantitiesNorm<Ibis::dual> rel_norms = jfnk_.relative_residual_norms();
     std::ofstream relative_residual_file("log/relative_residuals.dat",
                                          std::ios_base::app);
-    rel_norms.write_to_file(relative_residual_file, (Ibis::real)step, step);
+    rel_norms.write_to_file(relative_residual_file, wc, (Ibis::real)step, step);
 
     const LinearSolveResult& gmres_result = jfnk_.last_gmres_result();
     std::ofstream gmres_diagnostics("log/gmres_diagnostics.dat", std::ios_base::app);
