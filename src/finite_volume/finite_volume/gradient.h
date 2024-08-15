@@ -97,10 +97,10 @@ public:
                     T dy = cells.centroids().y(neighbour_j) - yi;
                     T dz = cells.centroids().z(neighbour_j) - zi;
                     T alpha_1 = dx / (r11 * r11);
-                    T alpha_2 = 1.0 / (r22 * r22) * (dy - r12 * r11 * dx);
+                    T alpha_2 = 1.0 / (r22 * r22) * (dy - r12 / r11 * dx);
                     T alpha_3 = 0.0;
                     if (dim == 3) {
-                        alpha_3 = 1.0 / (r33 * r33) * (dz - r23 * r22 * dy + beta * dx);
+                        alpha_3 = 1.0 / (r33 * r33) * (dz - r23 / r22 * dy + beta * dx);
                     }
                     T w_1 = alpha_1 - r12 / r11 * alpha_2 + beta * alpha_3;
                     T w_2 = alpha_2 - r23 / r22 * alpha_3;
